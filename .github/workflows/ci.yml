@@ -312,7 +312,7 @@ jobs:
         echo "- Secure API credential storage" >> CHANGELOG_TEMP.md
         echo "" >> CHANGELOG_TEMP.md
         echo "### Installation" >> CHANGELOG_TEMP.md
-        echo "Download the \`trello-task-creator-extension-${{ steps.version.outputs.tag }}.zip\` file and install it in Thunderbird via Tools → Add-ons → Install Add-on From File." >> CHANGELOG_TEMP.md
+        echo "Download the ZIP file below and install it in Thunderbird via Tools → Add-ons → Install Add-on From File." >> CHANGELOG_TEMP.md
         echo "" >> CHANGELOG_TEMP.md
         echo "### Requirements" >> CHANGELOG_TEMP.md
         echo "- Thunderbird 78.0 or higher" >> CHANGELOG_TEMP.md
