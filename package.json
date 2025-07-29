@@ -21,8 +21,12 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
-    "testMatch": ["<rootDir>/tests/**/*.test.js"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ],
     "collectCoverageFrom": [
       "*.js",
       "!jest.config.js",
@@ -33,7 +37,12 @@
     "type": "git",
     "url": "https://github.com/yourusername/thunderbird-trello-extension.git"
   },
-  "keywords": ["thunderbird", "trello", "extension", "webextension"],
+  "keywords": [
+    "thunderbird",
+    "trello",
+    "extension",
+    "webextension"
+  ],
   "author": "Your Name",
   "license": "MIT"
 }
