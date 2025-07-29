@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "Trello Task Creator",
+  "version": "1.0.0",
+  "description": "Create Trello tasks directly from Thunderbird emails",
+  
+  "applications": {
+    "gecko": {
+      "id": "trello-task-creator@thunderbird.addon",
+      "strict_min_version": "78.0"
+    }
+  },
+
+  "permissions": [
+    "storage",
+    "https://api.trello.com/*"
+  ],
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Create Trello Task",
+    "default_icon": {
+      "16": "icons/trello-16.png",
+      "32": "icons/trello-32.png",
+      "48": "icons/trello-48.png",
+      "128": "icons/trello-128.png"
+    }
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+
+  "icons": {
+    "16": "icons/trello-16.png",
+    "32": "icons/trello-32.png",
+    "48": "icons/trello-48.png",
+    "128": "icons/trello-128.png"
+  }
+}

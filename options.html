@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Trello Task Creator - Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #0079bf;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .help-text a {
+            color: #0079bf;
+            text-decoration: none;
+        }
+        
+        .help-text a:hover {
+            text-decoration: underline;
+        }
+        
+        button {
+            background-color: #0079bf;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #005a8b;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .test-button {
+            background-color: #61bd4f;
+        }
+        
+        .test-button:hover {
+            background-color: #51a33d;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            border-left: 4px solid #0079bf;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #0079bf;
+        }
+        
+        .instructions ol {
+            margin-bottom: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .token-display {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .token-display code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trello Task Creator Settings</h1>
+        
+        <div class="instructions">
+            <h3>Setup Instructions</h3>
+            <ol>
+                <li>Go to <a href="https://trello.com/power-ups/admin" target="_blank">Trello Power-Ups Admin</a></li>
+                <li>Click "Create a Power-Up" and fill in basic information</li>
+                <li>Copy your API Key from the power-up settings</li>
+                <li>Generate a token by visiting: <code>https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=Thunderbird%20Extension&key=YOUR_API_KEY</code></li>
+                <li>Replace <code>YOUR_API_KEY</code> with your actual API key in the URL above</li>
+                <li>Paste both values below and click "Save & Test"</li>
+            </ol>
+        </div>
+        
+        <form id="settings-form">
+            <div class="form-group">
+                <label for="api-key">Trello API Key:</label>
+                <input type="text" id="api-key" placeholder="Enter your Trello API key">
+                <div class="help-text">
+                    Get your API key from <a href="https://trello.com/power-ups/admin" target="_blank">Trello Power-Ups Admin</a>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="token">Trello Token:</label>
+                <input type="password" id="token" placeholder="Enter your Trello token">
+                <div class="help-text">
+                    Generate a token using the authorization URL above
+                </div>
+            </div>
+            
+            <div class="token-display" id="token-url-display" style="display: none;">
+                <strong>Token Generation URL:</strong><br>
+                <div id="token-url"></div>
+            </div>
+            
+            <button type="submit">Save Settings</button>
+            <button type="button" id="test-connection" class="test-button">Test Connection</button>
+            
+            <div class="message" id="message"></div>
+        </form>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>

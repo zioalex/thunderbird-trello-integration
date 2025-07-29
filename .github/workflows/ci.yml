@@ -1,0 +1,332 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created, published ]
+
+jobs:
+  test:
+    name: Test Extension
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run ESLint
+      run: npm run lint
+      
+    - name: Run tests
+      run: npm run test:coverage
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage/lcov.info
+        fail_ci_if_error: false
+
+  validate:
+    name: Validate Extension Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Validate manifest.json
+      run: |
+        echo "Validating manifest.json..."
+        python3 -m json.tool manifest.json > /dev/null
+        echo "✓ manifest.json is valid JSON"
+        
+    - name: Check required files exist
+      run: |
+        echo "Checking required files..."
+        required_files=("manifest.json" "popup.html" "popup.js" "options.html" "options.js" "background.js")
+        for file in "${required_files[@]}"; do
+          if [[ -f "$file" ]]; then
+            echo "✓ $file exists"
+          else
+            echo "✗ $file is missing"
+            exit 1
+          fi
+        done
+        
+    - name: Check icon files exist
+      run: |
+        echo "Checking icon files..."
+        icon_sizes=("16" "32" "48" "128")
+        for size in "${icon_sizes[@]}"; do
+          if [[ -f "icons/trello-${size}.png" ]]; then
+            echo "✓ icons/trello-${size}.png exists"
+          else
+            echo "✗ icons/trello-${size}.png is missing"
+            exit 1
+          fi
+        done
+        
+    - name: Validate HTML files
+      run: |
+        echo "Validating HTML files..."
+        html_files=("popup.html" "options.html")
+        for file in "${html_files[@]}"; do
+          if grep -q "<!DOCTYPE html>" "$file"; then
+            echo "✓ $file has valid DOCTYPE"
+          else
+            echo "✗ $file missing DOCTYPE"
+            exit 1
+          fi
+        done
+        
+    - name: Check JavaScript syntax
+      run: |
+        echo "Checking JavaScript syntax..."
+        js_files=("popup.js" "options.js" "background.js")
+        for file in "${js_files[@]}"; do
+          if node -c "$file"; then
+            echo "✓ $file has valid syntax"
+          else
+            echo "✗ $file has syntax errors"
+            exit 1
+          fi
+        done
+
+  build:
+    name: Build Extension Package
+    runs-on: ubuntu-latest
+    needs: [test, validate]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build extension package
+      run: npm run package
+      
+    - name: Verify package contents
+      run: |
+        echo "Verifying package contents..."
+        unzip -l trello-task-creator-extension.zip
+        
+        # Check that manifest.json is at root level
+        if unzip -l trello-task-creator-extension.zip | grep -q "manifest.json$"; then
+          echo "✓ manifest.json is at root level"
+        else
+          echo "✗ manifest.json not found at root level"
+          exit 1
+        fi
+        
+    - name: Upload extension artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: thunderbird-trello-extension-${{ github.sha }}
+        path: trello-task-creator-extension.zip
+        retention-days: 30
+
+  web-ext-lint:
+    name: Web-ext Validation
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install web-ext globally
+      run: npm install -g web-ext
+      
+    - name: Run web-ext lint
+      run: web-ext lint --source-dir=. --ignore-files=node_modules tests package.json package-lock.json .github .git coverage
+      
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
+      
+    - name: Check for secrets in code
+      run: |
+        echo "Scanning for potential secrets..."
+        if grep -r -i "api.key\|password\|secret\|token" *.js --exclude-dir=node_modules --exclude-dir=tests; then
+          echo "⚠️ Potential secrets found in code - please review"
+        else
+          echo "✓ No obvious secrets found in code"
+        fi
+
+  tag-release:
+    name: Create Release from Tag
+    runs-on: ubuntu-latest
+    needs: [test, validate, build, web-ext-lint]
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Extract version from tag
+      id: version
+      run: |
+        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        
+    - name: Validate version in manifest
+      run: |
+        MANIFEST_VERSION=$(grep '"version"' manifest.json | cut -d'"' -f4)
+        TAG_VERSION="${{ steps.version.outputs.version }}"
+        echo "Manifest version: $MANIFEST_VERSION"
+        echo "Tag version: $TAG_VERSION"
+        if [ "$MANIFEST_VERSION" != "$TAG_VERSION" ]; then
+          echo "❌ Version mismatch: manifest.json ($MANIFEST_VERSION) != tag ($TAG_VERSION)"
+          exit 1
+        fi
+        echo "✓ Version matches between manifest and tag"
+        
+    - name: Build extension package
+      run: npm run package
+      
+    - name: Generate changelog
+      id: changelog
+      run: |
+        echo "## Changes in ${{ steps.version.outputs.tag }}" > CHANGELOG_TEMP.md
+        echo "" >> CHANGELOG_TEMP.md
+        echo "### Features" >> CHANGELOG_TEMP.md
+        echo "- Create Trello tasks directly from Thunderbird" >> CHANGELOG_TEMP.md
+        echo "- Select from your Trello boards and lists" >> CHANGELOG_TEMP.md
+        echo "- Simple popup interface with settings page" >> CHANGELOG_TEMP.md
+        echo "- Secure API credential storage" >> CHANGELOG_TEMP.md
+        echo "" >> CHANGELOG_TEMP.md
+        echo "### Installation" >> CHANGELOG_TEMP.md
+        echo "Download the \`trello-task-creator-extension-${{ steps.version.outputs.tag }}.zip\` file and install it in Thunderbird via Tools → Add-ons → Install Add-on From File." >> CHANGELOG_TEMP.md
+        echo "" >> CHANGELOG_TEMP.md
+        echo "### Requirements" >> CHANGELOG_TEMP.md
+        echo "- Thunderbird 78.0 or higher" >> CHANGELOG_TEMP.md
+        echo "- Trello API key and token (see README for setup instructions)" >> CHANGELOG_TEMP.md
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Trello Task Creator ${{ steps.version.outputs.tag }}
+        body_path: CHANGELOG_TEMP.md
+        files: |
+          trello-task-creator-extension.zip
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload to release artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-${{ steps.version.outputs.tag }}
+        path: |
+          trello-task-creator-extension.zip
+          CHANGELOG_TEMP.md
+        retention-days: 90
+
+  release:
+    name: Attach to Manual Release
+    runs-on: ubuntu-latest
+    needs: [test, validate, build, web-ext-lint]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Extract version info
+      id: version
+      run: |
+        echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+        echo "name=${{ github.event.release.name }}" >> $GITHUB_OUTPUT
+        echo "prerelease=${{ github.event.release.prerelease }}" >> $GITHUB_OUTPUT
+        
+    - name: Build extension package
+      run: npm run package
+      
+    - name: Verify package
+      run: |
+        echo "📦 Package contents:"
+        unzip -l trello-task-creator-extension.zip
+        echo "📊 Package size: $(du -h trello-task-creator-extension.zip | cut -f1)"
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./trello-task-creator-extension.zip
+        asset_name: trello-task-creator-extension-${{ steps.version.outputs.tag }}.zip
+        asset_content_type: application/zip

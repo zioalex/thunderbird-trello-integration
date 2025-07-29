@@ -1,0 +1,39 @@
+{
+  "name": "trello-task-creator-thunderbird",
+  "version": "1.0.0",
+  "description": "Thunderbird extension to create Trello tasks",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint *.js",
+    "lint:fix": "eslint *.js --fix",
+    "validate": "npm run lint && npm run test",
+    "build": "npm run validate && npm run package",
+    "package": "zip -r trello-task-creator-extension.zip . -x node_modules/\\* package*.json *.svg .git/\\* .github/\\* tests/\\* jest.config.js .eslintrc.js coverage/\\*"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "web-ext": "^7.11.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
+    "testMatch": ["<rootDir>/tests/**/*.test.js"],
+    "collectCoverageFrom": [
+      "*.js",
+      "!jest.config.js",
+      "!coverage/**"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/thunderbird-trello-extension.git"
+  },
+  "keywords": ["thunderbird", "trello", "extension", "webextension"],
+  "author": "Your Name",
+  "license": "MIT"
+}
