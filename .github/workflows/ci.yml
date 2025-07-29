@@ -222,7 +222,7 @@ jobs:
     - name: Get version from manifest
       id: version
       run: |
-        VERSION=$(grep '\"version\"' manifest.json | cut -d'\"' -f4)
+        VERSION=$(grep '"version"' manifest.json | cut -d'"' -f4)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
         echo "Current version in manifest: $VERSION"
