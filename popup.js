@@ -175,7 +175,7 @@ class TrelloTaskCreator {
                 throw new Error('Failed to create task');
             }
             
-            const card = await response.json();
+            await response.json(); // Task created successfully
             this.showMessage('Task created successfully!', 'success');
             
             // Clear form
