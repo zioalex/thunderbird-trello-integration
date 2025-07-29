@@ -16,7 +16,7 @@ console.log('=' .repeat(50));
 function runCommand(command, description) {
     console.log(`\n📋 ${description}...`);
     try {
-        const output = execSync(command, { 
+        execSync(command, { 
             encoding: 'utf8', 
             stdio: 'inherit',
             cwd: __dirname 

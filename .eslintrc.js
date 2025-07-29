@@ -59,6 +59,15 @@ module.exports = {
         afterEach: 'readonly',
         afterAll: 'readonly'
       }
+    },
+    {
+      files: ['test-runner.js'],
+      env: {
+        node: true
+      },
+      rules: {
+        'no-console': 'off'
+      }
     }
   ]
 };
