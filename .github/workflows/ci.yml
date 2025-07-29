@@ -376,11 +376,11 @@ jobs:
         echo "📊 Package size: $(du -h trello-task-creator-extension.zip | cut -f1)"
         
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./trello-task-creator-extension.zip
-        asset_name: trello-task-creator-extension-${{ steps.version.outputs.tag }}.zip
-        asset_content_type: application/zip
+        tag_name: ${{ github.event.release.tag_name }}
+        files: |
+          trello-task-creator-extension.zip
+        append_body: true

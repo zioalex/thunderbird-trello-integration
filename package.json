@@ -1,6 +1,6 @@
 {
   "name": "trello-task-creator-thunderbird",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Thunderbird extension to create Trello tasks",
   "scripts": {
     "test": "jest",
@@ -10,7 +10,7 @@
     "lint:fix": "eslint *.js --fix",
     "validate": "npm run lint && npm run test",
     "build": "npm run validate && npm run package",
-    "package": "zip -r trello-task-creator-extension.zip . -x node_modules/\\* package*.json *.svg .git/\\* .github/\\* tests/\\* jest.config.js .eslintrc.js coverage/\\*"
+    "package": "rm -f trello-task-creator-extension.zip && zip -r trello-task-creator-extension.zip manifest.json background.js popup.html popup.js options.html options.js icons/ README.md -x '*.svg' '.*' 'node_modules/*' 'tests/*' 'coverage/*'"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
