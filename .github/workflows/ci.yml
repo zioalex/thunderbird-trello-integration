@@ -206,6 +206,55 @@ jobs:
           echo "✓ No obvious secrets found in code"
         fi
 
+  auto-tag:
+    name: Auto Tag Release
+    runs-on: ubuntu-latest
+    needs: [test, validate, build, web-ext-lint, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Needed to get all tags
+        token: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Get version from manifest
+      id: version
+      run: |
+        VERSION=$(grep '\"version\"' manifest.json | cut -d'\"' -f4)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        echo "Current version in manifest: $VERSION"
+        
+    - name: Check if tag already exists
+      id: tag_check
+      run: |
+        if git tag --list | grep -q "^${{ steps.version.outputs.tag }}$"; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Tag ${{ steps.version.outputs.tag }} already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Tag ${{ steps.version.outputs.tag }} does not exist"
+        fi
+        
+    - name: Create and push tag
+      if: steps.tag_check.outputs.exists == 'false'
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        echo "Creating tag ${{ steps.version.outputs.tag }}"
+        git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.tag }}"
+        git push origin ${{ steps.version.outputs.tag }}
+        
+        echo "✅ Tag ${{ steps.version.outputs.tag }} created and pushed"
+        
+    - name: Skip tag creation
+      if: steps.tag_check.outputs.exists == 'true'
+      run: |
+        echo "⏭️ Skipping tag creation - ${{ steps.version.outputs.tag }} already exists"
+
   tag-release:
     name: Create Release from Tag
     runs-on: ubuntu-latest
