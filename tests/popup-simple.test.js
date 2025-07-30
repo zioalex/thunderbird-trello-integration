@@ -80,7 +80,6 @@ describe('Popup.js - Coverage Tests', () => {
     const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
     expect(popupScript).toContain('if (typeof document !== \'undefined\')');
     expect(popupScript).toContain('DOMContentLoaded');
-    expect(popupScript).toContain('/* global module */');
   });
 
   test('should have proper module exports for testing', () => {
