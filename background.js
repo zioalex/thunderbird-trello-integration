@@ -49,7 +49,7 @@ function formatEmailForTrello(body, message) {
     const processedLines = [];
     let inQuote = false;
     
-    for (let line of lines) {
+    for (const line of lines) {
         const trimmedLine = line.trim();
         
         // Detect quoted text
