@@ -34,5 +34,20 @@ describe('Popup.js', () => {
     expect(popupScript).toContain('DOMContentLoaded');
   });
 
+  test('should contain pre-fill functionality', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('prefillTaskForm');
+    expect(popupScript).toContain('get_current_message');
+    expect(popupScript).toContain('browser.runtime.sendMessage');
+  });
+
+  test('should handle email subject and body in pre-fill', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('task-title');
+    expect(popupScript).toContain('task-description');
+    expect(popupScript).toContain('message.subject');
+    expect(popupScript).toContain('message.body');
+  });
+
 });
 

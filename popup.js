@@ -20,6 +20,7 @@ class TrelloTaskCreator {
         if (this.apiKey && this.token) {
             await this.loadBoards();
             this.showTaskForm();
+            await this.prefillTaskForm();
         } else {
             this.showConfigNeeded();
         }
@@ -208,9 +209,30 @@ class TrelloTaskCreator {
         browser.runtime.openOptionsPage();
         window.close();
     }
+
+    async prefillTaskForm() {
+        try {
+            const message = await browser.runtime.sendMessage({ command: "get_current_message" });
+
+            if (message && message.subject) {
+                document.getElementById('task-title').value = message.subject;
+            }
+            if (message && message.body) {
+                document.getElementById('task-description').value = message.body;
+            }
+        } catch (e) {
+            console.error(`Error pre-filling task form: ${e}`);
+            // This is not a critical error, so we just log it.
+        }
+    }
 }
 
 // Initialize the popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new TrelloTaskCreator();
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { TrelloTaskCreator };
+}

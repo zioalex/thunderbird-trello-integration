@@ -13,8 +13,12 @@ global.browser = {
     }
   },
   runtime: {
-    openOptionsPage: jest.fn()
-  }
+    openOptionsPage: jest.fn(),
+    sendMessage: jest.fn(),
+    onMessage: {
+      addListener: jest.fn(),
+    },
+  },
 };
 
 // Mock DOM methods
