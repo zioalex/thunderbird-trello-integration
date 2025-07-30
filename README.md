@@ -158,6 +158,68 @@ The extension consists of:
 - `background.js` - Background script (minimal for this version)
 - `tests/` - Test suite for validation
 - `package.json` - Node.js dependencies and scripts
+- `scripts/bump-version.sh` - Automated version management script
+
+### Version Management
+
+The project includes an automated version bump system that handles updating both `package.json` and `manifest.json`, committing changes, and triggering CI releases.
+
+#### Quick Version Bumps
+
+```bash
+# Patch version bump (1.1.0 → 1.1.1)
+npm run version:patch
+
+# Minor version bump (1.1.0 → 1.2.0)
+npm run version:minor
+
+# Major version bump (1.1.0 → 2.0.0)
+npm run version:major
+
+# Default patch bump
+npm run version
+```
+
+#### Manual Script Usage
+
+```bash
+# Using the script directly
+./scripts/bump-version.sh patch
+./scripts/bump-version.sh minor
+./scripts/bump-version.sh major
+./scripts/bump-version.sh 1.2.3  # Set specific version
+
+# Show help
+./scripts/bump-version.sh --help
+```
+
+#### What the Version Script Does
+
+1. **Validates** git status (warns about uncommitted changes)
+2. **Calculates** new version based on semantic versioning
+3. **Checks** if git tag already exists (prevents duplicates)
+4. **Updates** both `package.json` and `manifest.json` versions
+5. **Verifies** the updates were successful
+6. **Commits** changes with standardized commit message
+7. **Pushes** to remote repository
+8. **Triggers** CI to create git tag and release artifacts
+
+#### Safety Features
+
+- **Confirmation prompt** before making any changes
+- **Git status validation** with warnings for uncommitted changes
+- **Tag existence checking** to prevent duplicate releases
+- **Version verification** ensures both files are updated correctly
+- **Colored output** for better visibility of the process
+
+#### Version Numbering
+
+The project follows [Semantic Versioning](https://semver.org/):
+- **Major** (X.0.0): Breaking changes or major new features
+- **Minor** (1.X.0): New features that are backward compatible
+- **Patch** (1.1.X): Bug fixes and small improvements
+
+Both `package.json` and `manifest.json` are automatically kept in sync.
 
 ## Security Notes
 
