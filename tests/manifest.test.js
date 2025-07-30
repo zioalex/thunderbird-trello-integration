@@ -19,7 +19,7 @@ describe('Manifest.json', () => {
   test('should have required fields', () => {
     expect(manifest.manifest_version).toBe(2);
     expect(manifest.name).toBe('Trello Task Creator');
-    expect(manifest.version).toBe('1.0.2');
+    expect(manifest.version).toBe('1.1.1');
     expect(manifest.description).toBeDefined();
   });
 

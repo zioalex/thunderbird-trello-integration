@@ -97,6 +97,21 @@ update_manifest_json() {
     fi
 }
 
+# Function to update tests/manifest.test.js version
+update_manifest_test() {
+    local new_version=$1
+    print_status "Updating tests/manifest.test.js to version $new_version..."
+    
+    # Use sed to update the expected version in the test file
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        sed -i '' "s/expect(manifest\.version)\.toBe('\([^']*\)')/expect(manifest.version).toBe('$new_version')/" tests/manifest.test.js
+    else
+        # Linux
+        sed -i "s/expect(manifest\.version)\.toBe('\([^']*\)')/expect(manifest.version).toBe('$new_version')/" tests/manifest.test.js
+    fi
+}
+
 # Function to check if tag exists
 tag_exists() {
     local tag=$1
@@ -151,8 +166,9 @@ main() {
     print_warning "This will:"
     echo "  1. Update package.json version to $new_version"
     echo "  2. Update manifest.json version to $new_version"
-    echo "  3. Commit the changes with message 'Bump version to $new_version'"
-    echo "  4. Push the changes to remote"
+    echo "  3. Update tests/manifest.test.js version to $new_version"
+    echo "  4. Commit the changes with message 'Bump version to $new_version'"
+    echo "  5. Push the changes to remote"
     echo
     read -p "Continue? (y/N): " -n 1 -r
     echo
@@ -164,6 +180,7 @@ main() {
     # Update version files
     update_package_json "$new_version"
     update_manifest_json "$new_version"
+    update_manifest_test "$new_version"
     
     # Verify the changes
     print_status "Verifying changes..."
@@ -178,7 +195,7 @@ main() {
     
     # Stage the changes
     print_status "Staging changes..."
-    git add package.json manifest.json
+    git add package.json manifest.json tests/manifest.test.js
     
     # Commit the changes
     print_status "Committing changes..."
