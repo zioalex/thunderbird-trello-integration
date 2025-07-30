@@ -28,9 +28,16 @@ class TrelloTaskCreator {
     
     async loadConfig() {
         try {
-            const result = await browser.storage.sync.get(['trelloApiKey', 'trelloToken']);
+            const result = await browser.storage.sync.get([
+                'trelloApiKey', 
+                'trelloToken', 
+                'lastUsedBoardId', 
+                'lastUsedListId'
+            ]);
             this.apiKey = result.trelloApiKey || '';
             this.token = result.trelloToken || '';
+            this.lastUsedBoardId = result.lastUsedBoardId || '';
+            this.lastUsedListId = result.lastUsedListId || '';
         } catch (error) {
             console.error('Error loading config:', error);
         }
@@ -95,8 +102,19 @@ class TrelloTaskCreator {
             const option = document.createElement('option');
             option.value = board.id;
             option.textContent = board.name;
+            
+            // Pre-select the last used board if it matches
+            if (this.lastUsedBoardId && board.id === this.lastUsedBoardId) {
+                option.selected = true;
+            }
+            
             boardSelect.appendChild(option);
         });
+        
+        // If we have a pre-selected board, load its lists
+        if (this.lastUsedBoardId && boardSelect.value === this.lastUsedBoardId) {
+            this.onBoardChange(this.lastUsedBoardId);
+        }
     }
     
     async onBoardChange(boardId) {
@@ -137,6 +155,12 @@ class TrelloTaskCreator {
             const option = document.createElement('option');
             option.value = list.id;
             option.textContent = list.name;
+            
+            // Pre-select the last used list if it matches
+            if (this.lastUsedListId && list.id === this.lastUsedListId) {
+                option.selected = true;
+            }
+            
             listSelect.appendChild(option);
         });
     }
@@ -178,6 +202,9 @@ class TrelloTaskCreator {
             
             await response.json(); // Task created successfully
             this.showMessage('Task created successfully!', 'success');
+            
+            // Save the current board and list selection for next time
+            await this.saveLastUsedSelection(boardId, listId);
             
             // Clear form
             document.getElementById('task-title').value = '';
@@ -223,6 +250,22 @@ class TrelloTaskCreator {
         } catch (e) {
             console.error(`Error pre-filling task form: ${e}`);
             // This is not a critical error, so we just log it.
+        }
+    }
+
+    async saveLastUsedSelection(boardId, listId) {
+        try {
+            await browser.storage.sync.set({
+                lastUsedBoardId: boardId,
+                lastUsedListId: listId
+            });
+            
+            // Update instance variables for immediate use
+            this.lastUsedBoardId = boardId;
+            this.lastUsedListId = listId;
+        } catch (error) {
+            console.error('Error saving last used selection:', error);
+            // Not a critical error, continue execution
         }
     }
 }

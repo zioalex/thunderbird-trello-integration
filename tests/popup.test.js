@@ -49,5 +49,26 @@ describe('Popup.js', () => {
     expect(popupScript).toContain('message.body');
   });
 
+  test('should contain remember board/list functionality', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('lastUsedBoardId');
+    expect(popupScript).toContain('lastUsedListId');
+    expect(popupScript).toContain('saveLastUsedSelection');
+  });
+
+  test('should store last used board and list in browser storage', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('browser.storage.sync.set');
+    expect(popupScript).toContain('lastUsedBoardId: boardId');
+    expect(popupScript).toContain('lastUsedListId: listId');
+  });
+
+  test('should pre-select last used board and list', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('option.selected = true');
+    expect(popupScript).toContain('this.lastUsedBoardId && board.id === this.lastUsedBoardId');
+    expect(popupScript).toContain('this.lastUsedListId && list.id === this.lastUsedListId');
+  });
+
 });
 
