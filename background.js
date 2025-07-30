@@ -9,17 +9,17 @@
 async function getCurrentMessage() {
     try {
         // Query for the active tab in the message display window
-        const tabs = await browser.tabs.query({ active: true, windowType: "messageDisplay" });
+        const tabs = await browser.tabs.query({ active: true, windowType: 'messageDisplay' });
 
         if (!tabs || tabs.length === 0) {
-            console.log("No active message display tab found.");
+            console.log('No active message display tab found.');
             return null;
         }
 
         // Get the message displayed in the active tab
         const message = await browser.messageDisplay.getDisplayedMessage(tabs[0].id);
         if (!message) {
-            console.log("No message displayed in the active tab.");
+            console.log('No message displayed in the active tab.');
             return null;
         }
 
@@ -32,14 +32,14 @@ async function getCurrentMessage() {
             body: body
         };
     } catch (error) {
-        console.error("Error getting current message:", error);
+        console.error('Error getting current message:', error);
         return null;
     }
 }
 
 // Listen for messages from other parts of the extension (e.g., the popup)
-browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-    if (request.command === "get_current_message") {
+browser.runtime.onMessage.addListener(async (request, _sender, _sendResponse) => {
+    if (request.command === 'get_current_message') {
         const messageData = await getCurrentMessage();
         return messageData;
     }
