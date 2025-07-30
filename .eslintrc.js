@@ -3,7 +3,8 @@ module.exports = {
     browser: true,
     es2021: true,
     webextensions: true,
-    jest: true
+    jest: true,
+    commonjs: true
   },
   extends: [
     'eslint:recommended'
@@ -14,7 +15,8 @@ module.exports = {
   },
   globals: {
     browser: 'readonly',
-    console: 'readonly'
+    console: 'readonly',
+    module: 'readonly'
   },
   rules: {
     // Possible errors
