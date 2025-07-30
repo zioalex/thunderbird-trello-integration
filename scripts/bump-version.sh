@@ -203,7 +203,17 @@ main() {
     
     # Push the changes
     print_status "Pushing changes..."
-    git push
+    
+    # Check if current branch has upstream, if not set it up
+    local current_branch=$(git branch --show-current)
+    local upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "")
+    
+    if [[ -z "$upstream" ]]; then
+        print_status "Setting up upstream branch for $current_branch..."
+        git push --set-upstream origin "$current_branch"
+    else
+        git push
+    fi
     
     print_success "Version successfully bumped to $new_version!"
     print_success "The CI will now create tag $tag and build the release."
