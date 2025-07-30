@@ -127,3 +127,61 @@ describe('Extension API Integration', () => {
     expect(optionsJs).toContain('browser.storage.sync.set');
   });
 });
+
+describe('Email Pre-fill Integration', () => {
+  const extensionRoot = path.join(__dirname, '..');
+
+  test('manifest should include required permissions for email access', () => {
+    const manifestPath = path.join(extensionRoot, 'manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    
+    expect(manifest.permissions).toContain('messageDisplay');
+    expect(manifest.permissions).toContain('messages.read');
+  });
+
+  test('background script should handle message requests', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    
+    expect(backgroundJs).toContain('browser.runtime.onMessage.addListener');
+    expect(backgroundJs).toContain('get_current_message');
+    expect(backgroundJs).toContain('browser.messageDisplay.getDisplayedMessage');
+    expect(backgroundJs).toContain('browser.messages.getPlainBody');
+  });
+
+  test('popup script should send message requests to background', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    
+    expect(popupJs).toContain('browser.runtime.sendMessage');
+    expect(popupJs).toContain('get_current_message');
+    expect(popupJs).toContain('prefillTaskForm');
+  });
+
+  test('should handle email content prefilling workflow', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    
+    // Check popup initiates prefill during initialization
+    expect(popupJs).toContain('await this.prefillTaskForm();');
+    
+    // Check background script extracts subject and body
+    expect(backgroundJs).toContain('subject: message.subject');
+    expect(backgroundJs).toContain('body: body');
+    
+    // Check popup populates form fields
+    expect(popupJs).toContain('task-title');
+    expect(popupJs).toContain('task-description');
+  });
+
+  test('should handle errors in prefill workflow gracefully', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    
+    // Both scripts should have error handling
+    expect(popupJs).toContain('catch (e)');
+    expect(backgroundJs).toContain('catch (error)');
+    
+    // Should log errors but not crash
+    expect(popupJs).toContain('console.error');
+    expect(backgroundJs).toContain('console.error');
+  });
+});
