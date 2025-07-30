@@ -44,3 +44,8 @@ browser.runtime.onMessage.addListener(async (request, _sender, _sendResponse) =>
         return messageData;
     }
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { getCurrentMessage };
+}

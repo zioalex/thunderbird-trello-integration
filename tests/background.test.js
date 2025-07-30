@@ -3,8 +3,10 @@ const fs = require('fs');
 const path = require('path');
 require('./setup.js');
 
+// Import the getCurrentMessage function from background.js
+const { getCurrentMessage } = require('../background.js');
+
 describe('Background.js - Email Pre-fill Feature', () => {
-  let getCurrentMessage;
 
   beforeEach(() => {
     // Mock default successful responses
@@ -16,31 +18,6 @@ describe('Background.js - Email Pre-fill Feature', () => {
     global.browser.messages.getPlainBody.mockResolvedValue({
       value: 'Test Body'
     });
-
-    // Create a mock getCurrentMessage function based on the background.js logic
-    getCurrentMessage = async () => {
-      try {
-        const tabs = await browser.tabs.query({ active: true, windowType: 'messageDisplay' });
-        if (!tabs || tabs.length === 0) {
-          console.log('No active message display tab found.');
-          return null;
-        }
-        const message = await browser.messageDisplay.getDisplayedMessage(tabs[0].id);
-        if (!message) {
-          console.log('No message displayed in the active tab.');
-          return null;
-        }
-        const bodyPart = await browser.messages.getPlainBody(message.id);
-        const body = bodyPart ? bodyPart.value : '';
-        return {
-          subject: message.subject,
-          body: body
-        };
-      } catch (error) {
-        console.error('Error getting current message:', error);
-        return null;
-      }
-    };
   });
 
   test('should contain getCurrentMessage function', () => {

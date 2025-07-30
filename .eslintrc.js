@@ -15,8 +15,7 @@ module.exports = {
   },
   globals: {
     browser: 'readonly',
-    console: 'readonly',
-    module: 'readonly'
+    console: 'readonly'
   },
   rules: {
     // Possible errors

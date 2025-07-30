@@ -188,8 +188,8 @@ describe('Email Pre-fill Integration', () => {
     const manifestPath = path.join(extensionRoot, 'manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     
-    expect(manifest.permissions).toContain('messageDisplay');
-    expect(manifest.permissions).toContain('messages.read');
+    expect(manifest.permissions).toContain('messagesRead');
+    expect(manifest.permissions).toContain('tabs');
   });
 
   test('background script should handle message requests', () => {
