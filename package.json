@@ -10,7 +10,7 @@
     "lint:fix": "eslint *.js --fix",
     "validate": "npm run lint && npm run test",
     "build": "npm run validate && npm run package",
-    "package": "rm -f trello-task-creator-extension.zip && zip -r trello-task-creator-extension.zip manifest.json background.js popup.html popup.js options.html options.js icons/ README.md -x '*.svg' '.*' 'node_modules/*' 'tests/*' 'coverage/*'",
+    "package": "rm -f trello-task-creator-extension.zip && mkdir -p dist && cp -r manifest.json background.js popup.html popup.js options.html options.js icons/ README.md dist/ && cd dist && zip -r ../trello-task-creator-extension.zip . && cd .. && rm -rf dist",
     "version:patch": "./scripts/bump-version.sh patch",
     "version:minor": "./scripts/bump-version.sh minor",
     "version:major": "./scripts/bump-version.sh major",
