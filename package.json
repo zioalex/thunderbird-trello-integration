@@ -14,7 +14,9 @@
     "version:patch": "./scripts/bump-version.sh patch",
     "version:minor": "./scripts/bump-version.sh minor",
     "version:major": "./scripts/bump-version.sh major",
-    "version": "./scripts/bump-version.sh"
+    "version": "./scripts/bump-version.sh",
+    "release": "./scripts/create-release.sh",
+    "release:tag": "./scripts/create-release.sh"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
