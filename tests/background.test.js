@@ -51,3 +51,45 @@ describe('Background.js - Email Pre-fill Feature', () => {
   });
 
 });
+
+describe('Background.js - Task Sync Feature', () => {
+
+  test('should contain task sync functions', () => {
+    const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+    expect(backgroundScript).toContain('fetchThunderbirdTasks');
+    expect(backgroundScript).toContain('syncThunderbirdTasks');
+  });
+
+  test('should use correct Trello API endpoints for task fetching', () => {
+    const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+    expect(backgroundScript).toContain('/members/me/boards');
+    expect(backgroundScript).toContain('/boards/${board.id}/labels');
+    expect(backgroundScript).toContain('/boards/${board.id}/cards');
+  });
+
+  test('should store synced tasks in browser local storage', () => {
+    const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+    expect(backgroundScript).toContain('browser.storage.local.set');
+    expect(backgroundScript).toContain('thunderbirdTasks');
+    expect(backgroundScript).toContain('lastSync');
+  });
+
+  test('should have message listeners for task retrieval and sync commands', () => {
+    const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+    expect(backgroundScript).toContain('get_tasks');
+    expect(backgroundScript).toContain('sync_tasks');
+  });
+
+  test('should handle task sync errors gracefully', () => {
+    const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+    expect(backgroundScript).toContain('Error fetching Thunderbird tasks');
+    expect(backgroundScript).toContain('Error syncing Thunderbird tasks');
+    expect(backgroundScript).toContain('Error processing board');
+  });
+
+  test('should have periodic task syncing', () => {
+    const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+    expect(backgroundScript).toContain('setInterval(syncThunderbirdTasks');
+  });
+
+});

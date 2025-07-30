@@ -10,6 +10,10 @@ global.browser = {
     sync: {
       get: jest.fn(),
       set: jest.fn()
+    },
+    local: {
+      get: jest.fn(),
+      set: jest.fn()
     }
   },
   runtime: {

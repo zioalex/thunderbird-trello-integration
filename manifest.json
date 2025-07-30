@@ -15,7 +15,8 @@
     "storage",
     "https://api.trello.com/*",
     "messageDisplay",
-    "messages.read"
+    "messages.read",
+    "tabs"
   ],
 
   "background": {

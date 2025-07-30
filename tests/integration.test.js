@@ -167,6 +167,55 @@ describe('Thunderbird Tagging Integration', () => {
   });
 });
 
+describe('Task Display Integration', () => {
+  const extensionRoot = path.join(__dirname, '..');
+
+  test('should synchronize Thunderbird-tagged tasks from Trello', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('fetchThunderbirdTasks');
+    expect(backgroundJs).toContain('syncThunderbirdTasks');
+  });
+
+  test('should fetch tasks from all user boards', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('/members/me/boards');
+    expect(backgroundJs).toContain('for (const board of boards)');
+  });
+
+  test('should filter cards by Thunderbird label', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('thunderbirdLabel');
+    expect(backgroundJs).toContain('label.name.toLowerCase() === \'thunderbird\'');
+    expect(backgroundJs).toContain('card.labels.some(label => label.id === thunderbirdLabel.id)');
+  });
+
+  test('should store synced tasks in local storage', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('browser.storage.local.set');
+    expect(backgroundJs).toContain('thunderbirdTasks: tasks');
+    expect(backgroundJs).toContain('lastSync: Date.now()');
+  });
+
+  test('should provide task retrieval API', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('get_tasks');
+    expect(backgroundJs).toContain('sync_tasks');
+  });
+
+  test('should handle task sync failures gracefully', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('Error fetching Thunderbird tasks');
+    expect(backgroundJs).toContain('Error syncing Thunderbird tasks');
+    expect(backgroundJs).toContain('return []');
+  });
+
+  test('should sync tasks periodically', () => {
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    expect(backgroundJs).toContain('setInterval');
+    expect(backgroundJs).toContain('5 * 60 * 1000'); // 5 minutes
+  });
+});
+
 describe('Extension API Integration', () => {
   test('popup.js should contain TrelloTaskCreator class', () => {
     const popupJs = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
