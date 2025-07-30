@@ -337,5 +337,5 @@ console.log('=== BACKGROUND SCRIPT INITIALIZATION COMPLETE ===');
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { getCurrentMessage, formatEmailForTrello };
+    module.exports = { getCurrentMessage, formatEmailForTrello, extractBodyFromParts };
 }
