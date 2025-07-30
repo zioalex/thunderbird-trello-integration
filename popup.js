@@ -239,7 +239,7 @@ class TrelloTaskCreator {
 
     async prefillTaskForm() {
         try {
-            const message = await browser.runtime.sendMessage({ command: "get_current_message" });
+            const message = await browser.runtime.sendMessage({ command: 'get_current_message' });
 
             if (message && message.subject) {
                 document.getElementById('task-title').value = message.subject;
@@ -276,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export for testing
+/* global module */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { TrelloTaskCreator };
 }
