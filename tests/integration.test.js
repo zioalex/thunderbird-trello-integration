@@ -143,6 +143,30 @@ describe('Remember Board/List Integration', () => {
   });
 });
 
+describe('Thunderbird Tagging Integration', () => {
+  const extensionRoot = path.join(__dirname, '..');
+
+  test('should add a Thunderbird label to new tasks', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('ensureThunderbirdLabel');
+    expect(popupJs).toContain('addLabelToCard');
+  });
+
+  test('should check for existing labels and create new ones if needed', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('/boards/${boardId}/labels'); // Fetching existing labels
+    expect(popupJs).toContain('find(label =>'); // Checking for existing label
+    expect(popupJs).toContain('/labels?key='); // Creating new label
+  });
+
+  test('should handle API errors gracefully during label management', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('Failed to fetch board labels');
+    expect(popupJs).toContain('Failed to create Thunderbird label');
+    expect(popupJs).toContain('Failed to add label to card');
+  });
+});
+
 describe('Extension API Integration', () => {
   test('popup.js should contain TrelloTaskCreator class', () => {
     const popupJs = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');

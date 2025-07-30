@@ -181,6 +181,9 @@ class TrelloTaskCreator {
             button.disabled = true;
             button.textContent = 'Creating...';
             
+            // First, ensure the Thunderbird label exists on the board
+            const thunderbirdLabelId = await this.ensureThunderbirdLabel(boardId);
+            
             const response = await fetch(
                 `https://api.trello.com/1/cards?key=${this.apiKey}&token=${this.token}`,
                 {
@@ -200,7 +203,13 @@ class TrelloTaskCreator {
                 throw new Error('Failed to create task');
             }
             
-            await response.json(); // Task created successfully
+            const createdCard = await response.json();
+            
+            // Add the Thunderbird label to the created card if we have the label ID
+            if (thunderbirdLabelId) {
+                await this.addLabelToCard(createdCard.id, thunderbirdLabelId);
+            }
+            
             this.showMessage('Task created successfully!', 'success');
             
             // Save the current board and list selection for next time
@@ -266,6 +275,89 @@ class TrelloTaskCreator {
         } catch (error) {
             console.error('Error saving last used selection:', error);
             // Not a critical error, continue execution
+        }
+    }
+
+    /**
+     * Ensures that a Thunderbird label exists on the specified board.
+     * Creates the label if it doesn't exist, returns the label ID.
+     */
+    async ensureThunderbirdLabel(boardId) {
+        try {
+            // Get existing labels on the board
+            const response = await fetch(
+                `https://api.trello.com/1/boards/${boardId}/labels?key=${this.apiKey}&token=${this.token}`
+            );
+            
+            if (!response.ok) {
+                console.error('Failed to fetch board labels');
+                return null;
+            }
+            
+            const labels = await response.json();
+            
+            // Check if Thunderbird label already exists
+            const existingLabel = labels.find(label => 
+                label.name && label.name.toLowerCase() === 'thunderbird'
+            );
+            
+            if (existingLabel) {
+                return existingLabel.id;
+            }
+            
+            // Create the Thunderbird label if it doesn't exist
+            const createResponse = await fetch(
+                `https://api.trello.com/1/labels?key=${this.apiKey}&token=${this.token}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'Thunderbird',
+                        color: 'blue',
+                        idBoard: boardId
+                    })
+                }
+            );
+            
+            if (!createResponse.ok) {
+                console.error('Failed to create Thunderbird label');
+                return null;
+            }
+            
+            const createdLabel = await createResponse.json();
+            return createdLabel.id;
+            
+        } catch (error) {
+            console.error('Error ensuring Thunderbird label:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Adds a label to a Trello card.
+     */
+    async addLabelToCard(cardId, labelId) {
+        try {
+            const response = await fetch(
+                `https://api.trello.com/1/cards/${cardId}/idLabels?key=${this.apiKey}&token=${this.token}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        value: labelId
+                    })
+                }
+            );
+            
+            if (!response.ok) {
+                console.error('Failed to add label to card');
+            }
+        } catch (error) {
+            console.error('Error adding label to card:', error);
         }
     }
 }

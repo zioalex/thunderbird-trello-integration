@@ -66,8 +66,32 @@ describe('Popup.js', () => {
   test('should pre-select last used board and list', () => {
     const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
     expect(popupScript).toContain('option.selected = true');
-    expect(popupScript).toContain('this.lastUsedBoardId && board.id === this.lastUsedBoardId');
-    expect(popupScript).toContain('this.lastUsedListId && list.id === this.lastUsedListId');
+    expect(popupScript).toContain('this.lastUsedBoardId \u0026\u0026 board.id === this.lastUsedBoardId');
+    expect(popupScript).toContain('this.lastUsedListId \u0026\u0026 list.id === this.lastUsedListId');
+  });
+
+  test('should contain Thunderbird tagging functionality', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('ensureThunderbirdLabel');
+    expect(popupScript).toContain('addLabelToCard');
+    expect(popupScript).toContain('Thunderbird');
+  });
+
+  test('should create and attach Thunderbird label to cards', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('/boards/${boardId}/labels');
+    expect(popupScript).toContain('/labels?key=');
+    expect(popupScript).toContain('/cards/${cardId}/idLabels');
+    expect(popupScript).toContain('name: \'Thunderbird\'');
+    expect(popupScript).toContain('color: \'blue\'');
+  });
+
+  test('should handle label creation and attachment errors gracefully', () => {
+    const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
+    expect(popupScript).toContain('Failed to fetch board labels');
+    expect(popupScript).toContain('Failed to create Thunderbird label');
+    expect(popupScript).toContain('Failed to add label to card');
+    expect(popupScript).toContain('Error ensuring Thunderbird label');
   });
 
 });
