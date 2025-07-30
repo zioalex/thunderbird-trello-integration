@@ -19,12 +19,49 @@ global.browser = {
       addListener: jest.fn(),
     },
   },
+  tabs: {
+    query: jest.fn(),
+  },
+  messageDisplay: {
+    getDisplayedMessage: jest.fn(),
+  },
+  messages: {
+    getPlainBody: jest.fn(),
+  },
 };
 
-// Mock DOM methods
-global.document.addEventListener = jest.fn();
-global.document.getElementById = jest.fn();
-global.document.createElement = jest.fn();
+// Mock DOM methods and global objects
+global.document = {
+  addEventListener: jest.fn(),
+  getElementById: jest.fn(() => ({
+    addEventListener: jest.fn(),
+    style: { display: '' },
+    value: '',
+    textContent: '',
+    className: '',
+    innerHTML: '',
+    appendChild: jest.fn(),
+    disabled: false
+  })),
+  createElement: jest.fn(() => ({
+    value: '',
+    textContent: '',
+    appendChild: jest.fn(),
+    addEventListener: jest.fn()
+  }))
+};
+
+global.window = {
+  close: jest.fn(),
+  setTimeout: setTimeout,
+  clearTimeout: clearTimeout,
+  location: {
+    href: 'http://localhost',
+    pathname: '/',
+    search: '',
+    hash: ''
+  }
+};
 
 // Mock console to avoid noise in tests
 global.console.log = jest.fn();
