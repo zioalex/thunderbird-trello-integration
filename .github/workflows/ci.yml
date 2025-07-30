@@ -40,8 +40,26 @@ jobs:
     - name: Run ESLint
       run: npm run lint
       
-    - name: Run tests
-      run: npm run test:coverage
+    - name: Run all tests with coverage
+      run: |
+        echo "🧪 Running all test suites..."
+        npm run test:coverage -- --verbose
+        echo "✅ All tests completed"
+        
+    - name: Display test results summary
+      run: |
+        echo "📊 Test Results Summary:"
+        if [ -f coverage/lcov-report/index.html ]; then
+          echo "✅ Coverage report generated"
+        fi
+        
+        # Count test files
+        TEST_FILES=$(find tests -name "*.test.js" | wc -l)
+        echo "📝 Total test files: $TEST_FILES"
+        
+        # List test files for verification
+        echo "📋 Test files found:"
+        find tests -name "*.test.js" | sort
       
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -49,6 +67,81 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage/lcov.info
         fail_ci_if_error: false
+
+  test-report:
+    name: Comprehensive Test Report
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests with detailed output
+      run: |
+        echo "🔍 Running comprehensive test analysis..."
+        echo ""
+        echo "📋 Test Files Found:"
+        find tests -name "*.test.js" | sort | while read file; do
+          echo "  - $file"
+        done
+        echo ""
+        
+        echo "🧪 Running all test suites..."
+        npm test -- --verbose --passWithNoTests
+        
+        echo ""
+        echo "📊 Test Suite Summary:"
+        echo "$(find tests -name '*.test.js' | wc -l) test files found"
+        
+        # List test suites
+        echo ""
+        echo "📝 Test Suites:"
+        find tests -name "*.test.js" | sed 's/tests\///g' | sed 's/\.test\.js//g' | sort | while read suite; do
+          echo "  ✓ $suite"
+        done
+        
+    - name: Verify all critical test files exist
+      run: |
+        echo "🔍 Verifying critical test files..."
+        critical_tests=(
+          "tests/background.test.js"
+          "tests/popup-simple.test.js"
+          "tests/options.test.js"
+          "tests/manifest.test.js"
+          "tests/integration.test.js"
+          "tests/e2e-prefill.test.js"
+          "tests/e2e-remember.test.js"
+        )
+        
+        missing_tests=()
+        for test in "${critical_tests[@]}"; do
+          if [[ -f "$test" ]]; then
+            echo "  ✅ $test"
+          else
+            echo "  ❌ $test (MISSING)"
+            missing_tests+=("$test")
+          fi
+        done
+        
+        if [ ${#missing_tests[@]} -gt 0 ]; then
+          echo ""
+          echo "❌ Missing critical test files:"
+          printf '  - %s\n' "${missing_tests[@]}"
+          exit 1
+        fi
+        
+        echo ""
+        echo "✅ All critical test files are present!"
 
   validate:
     name: Validate Extension Structure
@@ -119,7 +212,7 @@ jobs:
   build:
     name: Build Extension Package
     runs-on: ubuntu-latest
-    needs: [test, validate]
+    needs: [test, test-report, validate]
     
     steps:
     - name: Checkout code

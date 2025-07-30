@@ -67,8 +67,12 @@ describe('Manifest.json', () => {
     expect(manifest.content_scripts).toBeUndefined();
   });
 
-  test('should not have invalid Thunderbird permissions', () => {
-    const invalidPermissions = ['activeTab', 'messagesRead', 'accountsRead'];
+  test('should have valid Thunderbird permissions', () => {
+    expect(manifest.permissions).toContain('messagesRead');
+    expect(manifest.permissions).toContain('tabs');
+    
+    // Should not have browser-only permissions
+    const invalidPermissions = ['activeTab', 'accountsRead'];
     invalidPermissions.forEach(permission => {
       expect(manifest.permissions).not.toContain(permission);
     });

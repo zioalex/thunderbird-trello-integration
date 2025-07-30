@@ -3,7 +3,8 @@ module.exports = {
     browser: true,
     es2021: true,
     webextensions: true,
-    jest: true
+    jest: true,
+    commonjs: true
   },
   extends: [
     'eslint:recommended'

@@ -88,6 +88,59 @@ describe('Extension File Structure', () => {
       expect(stats.size).toBeGreaterThan(0);
     });
   });
+
+  test('should handle errors in prefill workflow gracefully', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
+    
+    // Both scripts should have error handling
+    expect(popupJs).toContain('catch (e)');
+    expect(backgroundJs).toContain('catch (error)');
+    
+    // Should log errors but not crash
+    expect(popupJs).toContain('console.error');
+    expect(backgroundJs).toContain('console.error');
+  });
+});
+
+describe('Remember Board/List Integration', () => {
+  const extensionRoot = path.join(__dirname, '..');
+
+  test('should save last-used board and list IDs to storage after task creation', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('saveLastUsedSelection');
+    expect(popupJs).toContain('browser.storage.sync.set');
+    expect(popupJs).toContain('lastUsedBoardId');
+    expect(popupJs).toContain('lastUsedListId');
+  });
+
+  test('should load last-used board and list IDs from storage on startup', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('browser.storage.sync.get');
+    expect(popupJs).toContain('lastUsedBoardId');
+    expect(popupJs).toContain('lastUsedListId');
+  });
+
+  test('should pre-select board and list from stored IDs', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('option.selected = true');
+    expect(popupJs).toContain('this.lastUsedBoardId');
+    expect(popupJs).toContain('this.lastUsedListId');
+  });
+
+  test('should handle cases where no previous selection is stored', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('this.lastUsedBoardId = result.lastUsedBoardId || \'\'');
+    expect(popupJs).toContain('this.lastUsedListId = result.lastUsedListId || \'\'');
+  });
+
+  test('should handle errors in storage operations gracefully', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('catch (error)');
+    expect(popupJs).toContain('console.error');
+    expect(popupJs).toContain('Error loading config');
+    expect(popupJs).toContain('Error saving last used selection');
+  });
 });
 
 describe('Extension API Integration', () => {
@@ -135,8 +188,8 @@ describe('Email Pre-fill Integration', () => {
     const manifestPath = path.join(extensionRoot, 'manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     
-    expect(manifest.permissions).toContain('messageDisplay');
-    expect(manifest.permissions).toContain('messages.read');
+    expect(manifest.permissions).toContain('messagesRead');
+    expect(manifest.permissions).toContain('tabs');
   });
 
   test('background script should handle message requests', () => {
@@ -183,5 +236,45 @@ describe('Email Pre-fill Integration', () => {
     // Should log errors but not crash
     expect(popupJs).toContain('console.error');
     expect(backgroundJs).toContain('console.error');
+  });
+});
+
+describe('Remember Board/List Integration', () => {
+  const extensionRoot = path.join(__dirname, '..');
+
+  test('should save last-used board and list IDs to storage after task creation', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('saveLastUsedSelection');
+    expect(popupJs).toContain('browser.storage.sync.set');
+    expect(popupJs).toContain('lastUsedBoardId');
+    expect(popupJs).toContain('lastUsedListId');
+  });
+
+  test('should load last-used board and list IDs from storage on startup', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('browser.storage.sync.get');
+    expect(popupJs).toContain('lastUsedBoardId');
+    expect(popupJs).toContain('lastUsedListId');
+  });
+
+  test('should pre-select board and list from stored IDs', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('option.selected = true');
+    expect(popupJs).toContain('this.lastUsedBoardId');
+    expect(popupJs).toContain('this.lastUsedListId');
+  });
+
+  test('should handle cases where no previous selection is stored', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('this.lastUsedBoardId = result.lastUsedBoardId || \'\'');
+    expect(popupJs).toContain('this.lastUsedListId = result.lastUsedListId || \'\'');
+  });
+
+  test('should handle errors in storage operations gracefully', () => {
+    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
+    expect(popupJs).toContain('catch (error)');
+    expect(popupJs).toContain('console.error');
+    expect(popupJs).toContain('Error loading config');
+    expect(popupJs).toContain('Error saving last used selection');
   });
 });

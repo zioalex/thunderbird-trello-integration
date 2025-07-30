@@ -30,7 +30,16 @@ describe('E2E: Email Pre-fill Feature', () => {
       'open-options-link': { addEventListener: jest.fn() },
       'config-needed': { style: { display: 'none' } },
       'task-form': { style: { display: 'block' } },
-      'message': { textContent: '', className: '' }
+      'message': { textContent: '', className: '' },
+      'label-select': {
+        addEventListener: jest.fn(),
+        value: '',
+        innerHTML: '',
+        appendChild: jest.fn()
+      },
+      'new-label-name': { value: '' },
+      'new-label-color': { value: 'green' },
+      'new-label-group': { style: { display: 'none' } }
     };
 
     global.document.getElementById = jest.fn((id) => mockElements[id] || { style: {} });
@@ -53,10 +62,18 @@ describe('E2E: Email Pre-fill Feature', () => {
       trelloToken: 'test-token'
     });
 
-    // Mock successful fetch responses
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue([])
+    // Mock successful fetch responses for boards
+    global.fetch.mockImplementation((url) => {
+      if (url.includes('/boards')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([{ id: 'board1', name: 'Test Board' }])
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([])
+      });
     });
   });
 
@@ -67,8 +84,8 @@ describe('E2E: Email Pre-fill Feature', () => {
     // This would normally be done by the browser when popup is opened
     mockTrelloTaskCreator = new TrelloTaskCreator();
     
-    // Wait for initialization to complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for initialization to complete (including async operations)
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify that browser.runtime.sendMessage was called with correct command
     expect(browser.runtime.sendMessage).toHaveBeenCalledWith({

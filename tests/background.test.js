@@ -1,10 +1,12 @@
-const { expect, describe, test, beforeEach } = require('@jest/globals');
+const { expect, describe, test, beforeEach, afterEach } = require('@jest/globals');
 const fs = require('fs');
 const path = require('path');
 require('./setup.js');
 
+// Import the functions from background.js
+const { getCurrentMessage, formatEmailForTrello, extractBodyFromParts } = require('../background.js');
+
 describe('Background.js - Email Pre-fill Feature', () => {
-  let getCurrentMessage;
 
   beforeEach(() => {
     // Mock default successful responses
@@ -16,31 +18,189 @@ describe('Background.js - Email Pre-fill Feature', () => {
     global.browser.messages.getPlainBody.mockResolvedValue({
       value: 'Test Body'
     });
+  });
 
-    // Create a mock getCurrentMessage function based on the background.js logic
-    getCurrentMessage = async () => {
-      try {
-        const tabs = await browser.tabs.query({ active: true, windowType: 'messageDisplay' });
-        if (!tabs || tabs.length === 0) {
-          console.log('No active message display tab found.');
-          return null;
-        }
-        const message = await browser.messageDisplay.getDisplayedMessage(tabs[0].id);
-        if (!message) {
-          console.log('No message displayed in the active tab.');
-          return null;
-        }
-        const bodyPart = await browser.messages.getPlainBody(message.id);
-        const body = bodyPart ? bodyPart.value : '';
-        return {
-          subject: message.subject,
-          body: body
-        };
-      } catch (error) {
-        console.error('Error getting current message:', error);
-        return null;
+  describe('formatEmailForTrello function', () => {
+    test('should format metadata correctly', () => {
+      const body = 'This is a test body.';
+      const testDate = new Date('2025-07-30T21:56:56Z');
+      const message = {
+        author: 'John Doe <john@example.com>',
+        recipients: ['jane@example.com'],
+        ccList: ['cc@example.com'],
+        date: testDate,
+      };
+      const result = formatEmailForTrello(body, message);
+      expect(result).toContain('**From:** John Doe <john@example.com>');
+      expect(result).toContain('**To:** jane@example.com');
+      expect(result).toContain('**CC:** cc@example.com');
+      // Test date format more flexibly to handle timezone differences
+      expect(result).toContain('**Date:**');
+      expect(result).toContain('7/30/2025');
+    });
+
+    test('should format quoted text correctly', () => {
+      const body = '\n> Quote\n> Another Quote';
+      const message = {};
+      const result = formatEmailForTrello(body, message);
+      expect(result).toContain('**Previous conversation:**');
+      expect(result).toContain('> Quote');
+    });
+
+    test('should detect and format signatures correctly', () => {
+      const body = 'This is a test body.\n\n-- \nSignature\nJohn';
+      const message = {};
+      const result = formatEmailForTrello(body, message);
+      expect(result).toContain('**Signature:**\n-- \nSignature\nJohn');
+    });
+
+    test('should handle empty message object', () => {
+      const body = 'Simple body text';
+      const message = {};
+      const result = formatEmailForTrello(body, message);
+      expect(result).toContain('## Email Details');
+      expect(result).toContain('Simple body text');
+      expect(result).not.toContain('**From:**');
+      expect(result).not.toContain('**To:**');
+      expect(result).not.toContain('**CC:**');
+      expect(result).not.toContain('**Date:**');
+    });
+
+    test('should clean up excessive whitespace', () => {
+      const body = 'Line 1\n\n\n\n\nLine 2';
+      const message = {};
+      const result = formatEmailForTrello(body, message);
+      expect(result).not.toMatch(/\n{4,}/);
+    });
+
+    test('should handle email addresses in recipients correctly', () => {
+      const body = 'Test body';
+      const message = {
+        recipients: ['John Doe <john@example.com>', 'jane@example.com'],
+        ccList: ['CC Person <cc@example.com>']
+      };
+      const result = formatEmailForTrello(body, message);
+      expect(result).toContain('**To:** john@example.com, jane@example.com');
+      expect(result).toContain('**CC:** cc@example.com');
+    });
+    
+    test('should format date independently of timezone', () => {
+      const body = 'Test body';
+      const testDate = new Date('2025-12-25T12:00:00Z'); // Christmas noon UTC
+      const message = { date: testDate };
+      const result = formatEmailForTrello(body, message);
+      
+      // Should contain the date field
+      expect(result).toContain('**Date:**');
+      // Should contain the date in some format
+      expect(result).toMatch(/\*\*Date:\*\*\s+.+/); 
+      // Date should be formatted as a valid date string
+      const dateMatch = result.match(/\*\*Date:\*\*\s+(.+)/m);
+      expect(dateMatch).toBeTruthy();
+      if (dateMatch) {
+        const dateString = dateMatch[1].trim();
+        // Should be a valid date string that contains 2025 and 12 (December)
+        expect(dateString).toMatch(/2025/);
+        expect(dateString).toMatch(/12/);
       }
-    };
+    });
+  });
+
+  describe('extractBodyFromParts function', () => {
+    // Mock console.log to suppress output during tests
+    const originalConsoleLog = console.log;
+    beforeEach(() => {
+      console.log = jest.fn();
+    });
+    
+    afterEach(() => {
+      console.log = originalConsoleLog;
+    });
+
+    test('should extract text/plain content', () => {
+      const parts = [
+        {
+          contentType: 'text/plain',
+          body: 'This is plain text content'
+        }
+      ];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('This is plain text content');
+    });
+
+    test('should extract and strip text/html content when no plain text', () => {
+      const parts = [
+        {
+          contentType: 'text/html',
+          body: '<p>This is <b>HTML</b> content</p>'
+        }
+      ];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('This is HTML content');
+    });
+
+    test('should concatenate all text content found', () => {
+      const parts = [
+        {
+          contentType: 'text/html',
+          body: '<p>HTML content</p>'
+        },
+        {
+          contentType: 'text/plain',
+          body: 'Plain text content'
+        }
+      ];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('HTML contentPlain text content');
+    });
+
+    test('should handle nested parts recursively', () => {
+      const parts = [
+        {
+          contentType: 'multipart/mixed',
+          parts: [
+            {
+              contentType: 'text/plain',
+              body: 'Nested plain text'
+            }
+          ]
+        }
+      ];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('Nested plain text');
+    });
+
+    test('should handle empty parts array', () => {
+      const parts = [];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('');
+    });
+
+    test('should skip parts without usable content', () => {
+      const parts = [
+        {
+          contentType: 'application/pdf',
+          body: 'binary data'
+        },
+        {
+          contentType: 'text/plain',
+          body: 'Plain text content'
+        }
+      ];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('Plain text content');
+    });
+
+    test('should handle &nbsp; entities in HTML', () => {
+      const parts = [
+        {
+          contentType: 'text/html',
+          body: 'Text&nbsp;with&nbsp;spaces'
+        }
+      ];
+      const result = extractBodyFromParts(parts);
+      expect(result).toBe('Text with spaces');
+    });
   });
 
   test('should contain getCurrentMessage function', () => {
@@ -106,10 +266,11 @@ describe('Background.js - Email Pre-fill Feature', () => {
     expect(message).toBeNull();
   });
 
-  test('should return null when plain body fails', async () => {
+  test('should return empty body when plain body fails', async () => {
     browser.messages.getPlainBody.mockRejectedValue(new Error('test error'));
     const message = await getCurrentMessage();
-    expect(message).toBeNull();
+    expect(message).toHaveProperty('subject', 'Test Subject');
+    expect(message).toHaveProperty('body', '');
   });
 
   test('should return correct message structure', async () => {
@@ -117,7 +278,9 @@ describe('Background.js - Email Pre-fill Feature', () => {
     expect(message).toHaveProperty('subject');
     expect(message).toHaveProperty('body');
     expect(message.subject).toBe('Test Subject');
-    expect(message.body).toBe('Test Body');
+    // Body should now be formatted with email details header
+    expect(message.body).toContain('## Email Details');
+    expect(message.body).toContain('Test Body');
   });
 
   test('should validate syntax', () => {
