@@ -4,4 +4,3 @@
 - Add a specific tag to every task created by Thunderbird - DONE
 - Use such tag to display all the Thunderbird-created tasks in the default task panel in Thunderbird
 - Avoid to call Trello on every Task creation and cache locally the board and lane. Update every 5mins
-

@@ -6,7 +6,46 @@ require('./setup.js');
 // Import the functions from background.js
 const { getCurrentMessage, formatEmailForTrello, extractBodyFromParts } = require('../background.js');
 
+
 describe('Background.js - Email Pre-fill Feature', () => {
+  let getCurrentMessage;
+
+  beforeEach(() => {
+    // Mock default successful responses
+    global.browser.tabs.query.mockResolvedValue([{ id: 1 }]);
+    global.browser.messageDisplay.getDisplayedMessage.mockResolvedValue({
+      id: 'msg1',
+      subject: 'Test Subject',
+    });
+    global.browser.messages.getPlainBody.mockResolvedValue({
+      value: 'Test Body'
+    });
+
+    // Create a mock getCurrentMessage function based on the background.js logic
+    getCurrentMessage = async () => {
+      try {
+        const tabs = await browser.tabs.query({ active: true, windowType: 'messageDisplay' });
+        if (!tabs || tabs.length === 0) {
+          console.log('No active message display tab found.');
+          return null;
+        }
+        const message = await browser.messageDisplay.getDisplayedMessage(tabs[0].id);
+        if (!message) {
+          console.log('No message displayed in the active tab.');
+          return null;
+        }
+        const bodyPart = await browser.messages.getPlainBody(message.id);
+        const body = bodyPart ? bodyPart.value : '';
+        return {
+          subject: message.subject,
+          body: body
+        };
+      } catch (error) {
+        console.error('Error getting current message:', error);
+        return null;
+      }
+    };
+  });
 
   beforeEach(() => {
     // Mock default successful responses

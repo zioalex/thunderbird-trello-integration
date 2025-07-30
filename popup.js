@@ -475,6 +475,7 @@ if (typeof document !== 'undefined') {
 }
 
 // Export for testing
+/* global module */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { TrelloTaskCreator };
 }
