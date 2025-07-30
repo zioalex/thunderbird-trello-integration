@@ -4,11 +4,16 @@ const path = require('path');
 
 describe('Manifest.json', () => {
   let manifest;
+  let packageJson;
 
   beforeAll(() => {
     const manifestPath = path.join(__dirname, '../manifest.json');
     const manifestContent = fs.readFileSync(manifestPath, 'utf8');
     manifest = JSON.parse(manifestContent);
+    
+    const packagePath = path.join(__dirname, '../package.json');
+    const packageContent = fs.readFileSync(packagePath, 'utf8');
+    packageJson = JSON.parse(packageContent);
   });
 
   test('should be valid JSON', () => {
@@ -19,7 +24,7 @@ describe('Manifest.json', () => {
   test('should have required fields', () => {
     expect(manifest.manifest_version).toBe(2);
     expect(manifest.name).toBe('Trello Task Creator');
-    expect(manifest.version).toBe('1.1.4');
+    expect(manifest.version).toBe(packageJson.version);
     expect(manifest.description).toBeDefined();
   });
 
