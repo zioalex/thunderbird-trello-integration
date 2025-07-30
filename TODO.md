@@ -1,5 +1,7 @@
-- Pre-fill the new task content with the message open in that moment.
-  - The task name should be also the message subject
-- Remember the board and list used precedently when created the latest task
-- Add a specific tag to every task created by Thunderbird
+- Pre-fill the new task content with the message open in that moment. - DONE
+  - The task name should be also the message subject - DONE
+- Remember the board and list used precedently when created the latest task - DONE
+- Add a specific tag to every task created by Thunderbird - DONE
 - Use such tag to display all the Thunderbird-created tasks in the default task panel in Thunderbird
+- Avoid to call Trello on every Task creation and cache locally the board and lane. Update every 5mins
+

@@ -16,7 +16,16 @@ describe('E2E: Remember Board/List Feature', () => {
       'open-options-link': { addEventListener: jest.fn() },
       'config-needed': { style: { display: 'none' } },
       'task-form': { style: { display: 'block' } },
-      'message': { textContent: '', className: '' }
+      'message': { textContent: '', className: '' },
+      'label-select': {
+        addEventListener: jest.fn(),
+        value: '',
+        innerHTML: '',
+        appendChild: jest.fn()
+      },
+      'new-label-name': { value: '' },
+      'new-label-color': { value: 'green' },
+      'new-label-group': { style: { display: 'none' } }
     };
 
     global.document.getElementById = jest.fn((id) => mockElements[id] || { style: {} });

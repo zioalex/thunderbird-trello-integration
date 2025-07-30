@@ -83,10 +83,11 @@ describe('Background.js - Email Pre-fill Feature', () => {
     expect(message).toBeNull();
   });
 
-  test('should return null when plain body fails', async () => {
+  test('should return empty body when plain body fails', async () => {
     browser.messages.getPlainBody.mockRejectedValue(new Error('test error'));
     const message = await getCurrentMessage();
-    expect(message).toBeNull();
+    expect(message).toHaveProperty('subject', 'Test Subject');
+    expect(message).toHaveProperty('body', '');
   });
 
   test('should return correct message structure', async () => {
@@ -94,7 +95,9 @@ describe('Background.js - Email Pre-fill Feature', () => {
     expect(message).toHaveProperty('subject');
     expect(message).toHaveProperty('body');
     expect(message.subject).toBe('Test Subject');
-    expect(message.body).toBe('Test Body');
+    // Body should now be formatted with email details header
+    expect(message.body).toContain('## Email Details');
+    expect(message.body).toContain('Test Body');
   });
 
   test('should validate syntax', () => {
