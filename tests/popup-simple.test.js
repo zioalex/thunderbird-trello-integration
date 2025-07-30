@@ -84,7 +84,7 @@ describe('Popup.js - Coverage Tests', () => {
 
   test('should have proper module exports for testing', () => {
     const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
-    expect(popupScript).toContain('if (typeof module !== \'undefined\' && module.exports)');
+    expect(popupScript).toContain('if (typeof exports === \'object\' && typeof module === \'object\')');
     expect(popupScript).toContain('module.exports = { TrelloTaskCreator }');
   });
 

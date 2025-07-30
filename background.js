@@ -336,6 +336,6 @@ console.log('Message listener set up successfully');
 console.log('=== BACKGROUND SCRIPT INITIALIZATION COMPLETE ===');
 
 // Export for testing
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof exports === 'object' && typeof module === 'object') {
     module.exports = { getCurrentMessage, formatEmailForTrello, extractBodyFromParts };
 }

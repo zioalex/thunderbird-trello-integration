@@ -474,8 +474,6 @@ if (typeof document !== 'undefined') {
     });
 }
 
-// Export for testing
-/* global module */
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof exports === 'object' && typeof module === 'object') {
     module.exports = { TrelloTaskCreator };
 }
