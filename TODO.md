@@ -1,0 +1,5 @@
+- Pre-fill the new task content with the message open in that moment.
+  - The task name should be also the message subject
+- Remember the board and list used precedently when created the latest task
+- Add a specific tag to every task created by Thunderbird
+- Use such tag to dispay the all the Thunderbird created task in thw defailt task panel in Thunderbird
