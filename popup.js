@@ -227,10 +227,11 @@ class TrelloTaskCreator {
     }
 }
 
-// Initialize the popup when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
     new TrelloTaskCreator();
-});
+  });
+}
 
 // Export for testing
 /* global module */

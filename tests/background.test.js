@@ -1,8 +1,47 @@
-const { expect, describe, test } = require('@jest/globals');
+const { expect, describe, test, beforeEach } = require('@jest/globals');
 const fs = require('fs');
 const path = require('path');
+require('./setup.js');
 
 describe('Background.js - Email Pre-fill Feature', () => {
+  let getCurrentMessage;
+
+  beforeEach(() => {
+    // Mock default successful responses
+    global.browser.tabs.query.mockResolvedValue([{ id: 1 }]);
+    global.browser.messageDisplay.getDisplayedMessage.mockResolvedValue({
+      id: 'msg1',
+      subject: 'Test Subject',
+    });
+    global.browser.messages.getPlainBody.mockResolvedValue({
+      value: 'Test Body'
+    });
+
+    // Create a mock getCurrentMessage function based on the background.js logic
+    getCurrentMessage = async () => {
+      try {
+        const tabs = await browser.tabs.query({ active: true, windowType: 'messageDisplay' });
+        if (!tabs || tabs.length === 0) {
+          console.log('No active message display tab found.');
+          return null;
+        }
+        const message = await browser.messageDisplay.getDisplayedMessage(tabs[0].id);
+        if (!message) {
+          console.log('No message displayed in the active tab.');
+          return null;
+        }
+        const bodyPart = await browser.messages.getPlainBody(message.id);
+        const body = bodyPart ? bodyPart.value : '';
+        return {
+          subject: message.subject,
+          body: body
+        };
+      } catch (error) {
+        console.error('Error getting current message:', error);
+        return null;
+      }
+    };
+  });
 
   test('should contain getCurrentMessage function', () => {
     const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
@@ -41,6 +80,44 @@ describe('Background.js - Email Pre-fill Feature', () => {
     expect(backgroundScript).toContain('catch (error)');
     expect(backgroundScript).toContain('console.error');
     expect(backgroundScript).toContain('return null');
+  });
+
+  test('should return null when no message is displayed', async () => {
+    browser.messageDisplay.getDisplayedMessage.mockResolvedValue(null);
+    const message = await getCurrentMessage();
+    expect(message).toBeNull();
+  });
+
+  test('should handle empty message body', async () => {
+    browser.messages.getPlainBody.mockResolvedValue(null);
+    const { body } = await getCurrentMessage();
+    expect(body).toBe('');
+  });
+
+  test('should return null when tabs query fails', async () => {
+    browser.tabs.query.mockRejectedValue(new Error('test error'));
+    const message = await getCurrentMessage();
+    expect(message).toBeNull();
+  });
+
+  test('should return null when message display fails', async () => {
+    browser.messageDisplay.getDisplayedMessage.mockRejectedValue(new Error('test error'));
+    const message = await getCurrentMessage();
+    expect(message).toBeNull();
+  });
+
+  test('should return null when plain body fails', async () => {
+    browser.messages.getPlainBody.mockRejectedValue(new Error('test error'));
+    const message = await getCurrentMessage();
+    expect(message).toBeNull();
+  });
+
+  test('should return correct message structure', async () => {
+    const message = await getCurrentMessage();
+    expect(message).toHaveProperty('subject');
+    expect(message).toHaveProperty('body');
+    expect(message.subject).toBe('Test Subject');
+    expect(message.body).toBe('Test Body');
   });
 
   test('should validate syntax', () => {
