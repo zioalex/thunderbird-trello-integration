@@ -19,7 +19,7 @@ describe('Background.js - Email Pre-fill Feature', () => {
 
   test('should handle message display window type correctly', () => {
     const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
-    expect(backgroundScript).toContain('windowType: "messageDisplay"');
+    expect(backgroundScript).toContain("windowType: 'messageDisplay'");
     expect(backgroundScript).toContain('active: true');
   });
 
