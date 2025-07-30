@@ -271,9 +271,9 @@ class TrelloTaskCreator {
 }
 
 if (typeof document !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new TrelloTaskCreator();
-  });
+    document.addEventListener('DOMContentLoaded', () => {
+        new TrelloTaskCreator();
+    });
 }
 
 // Export for testing
