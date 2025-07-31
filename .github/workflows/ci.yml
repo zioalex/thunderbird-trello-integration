@@ -364,9 +364,18 @@ jobs:
       run: |
         echo "⏭️ Skipping tag creation - ${{ steps.version.outputs.tag }} already exists"
         echo "created=false" >> $GITHUB_OUTPUT
-
+        
+    - name: Set created output
+      id: set_created_output
+      run: |
+        if [ "${{ steps.tag_check.outputs.exists }}" == "true" ]; then
+          echo "created=false" >> $GITHUB_OUTPUT
+        else
+          echo "created=true" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Store tag info for release workflow
-      if: steps.tag_creation.outputs.created == 'true'
+      if: steps.set_created_output.outputs.created == 'true'
       run: |
         echo "🏷️ New tag created: ${{ steps.version.outputs.tag }}"
         echo "Tag info will be available for the release workflow"
