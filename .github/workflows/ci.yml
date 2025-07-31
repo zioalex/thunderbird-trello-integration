@@ -375,13 +375,13 @@ jobs:
         fi
         
     - name: Store tag info for release workflow
-      id: tag_creation
+      id: tag_info
       run: |
         echo "⏭️ Skipping tag creation - ${{ steps.version.outputs.tag }} already exists"
         echo "created=false" >> $GITHUB_OUTPUT
         
     - name: Store tag info for release workflow
-      if: steps.tag_creation.outputs.created == 'true'
+      if: steps.tag_info.outputs.created == 'true'
       run: |
         echo "🏷️ New tag created: ${{ steps.version.outputs.tag }}"
         echo "Tag info will be available for the release workflow"
