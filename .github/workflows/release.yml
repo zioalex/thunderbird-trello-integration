@@ -36,7 +36,7 @@ jobs:
 
     - name: Validate version in manifest
       run: |
-        MANIFEST_VERSION=$(grep '"version"' manifest.json | cut -d'"' -f4)
+        MANIFEST_VERSION=$(jq -r '.version' manifest.json)
         TAG_VERSION="${{ steps.version.outputs.version }}"
         echo "Manifest version: $MANIFEST_VERSION"
         echo "Tag version: $TAG_VERSION"
