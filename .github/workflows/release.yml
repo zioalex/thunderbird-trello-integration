@@ -32,8 +32,20 @@ jobs:
     - name: Extract version from tag
       id: version
       run: |
-        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          # Automatic trigger from tag push
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "Triggered by tag push: $TAG"
+        else
+          # Manual trigger - extract version from manifest.json
+          VERSION=$(jq -r '.version' manifest.json)
+          TAG="v$VERSION"
+          echo "Triggered manually, using manifest version: $VERSION"
+        fi
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Final tag: $TAG, version: $VERSION"
 
     - name: Validate version in manifest
       run: |
