@@ -5,15 +5,68 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: write
   actions: read
 
 jobs:
+  check-release-needed:
+    name: Check if Release Needed
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      tag_name: ${{ steps.check.outputs.tag_name }}
+      version: ${{ steps.check.outputs.version }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Check if new tag was created
+      id: check
+      run: |
+        # Get the latest tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        if [ -z "$LATEST_TAG" ]; then
+          echo "No tags found"
+          echo "should_release=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        echo "Latest tag: $LATEST_TAG"
+        
+        # Check if this tag already has a release
+        if gh release view "$LATEST_TAG" >/dev/null 2>&1; then
+          echo "Release already exists for tag $LATEST_TAG"
+          echo "should_release=false" >> $GITHUB_OUTPUT
+        else
+          echo "No release found for tag $LATEST_TAG - will create release"
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "tag_name=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "version=${LATEST_TAG#v}" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs: check-release-needed
+    if: |
+      github.event_name == 'push' || 
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && needs.check-release-needed.outputs.should_release == 'true')
 
     steps:
     - name: Checkout code
@@ -32,7 +85,12 @@ jobs:
     - name: Extract version from tag
       id: version
       run: |
-        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+        if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+          # Use the tag from the check job
+          TAG="${{ needs.check-release-needed.outputs.tag_name }}"
+          VERSION="${{ needs.check-release-needed.outputs.version }}"
+          echo "Triggered by workflow_run: $TAG"
+        elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
           # Automatic trigger from tag push
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
@@ -87,9 +145,23 @@ jobs:
 
     - name: Generate changelog
       id: changelog
+      env:
+        TAG: ${{ steps.version.outputs.tag }}
       run: |
-        echo "## Changes in ${{ steps.version.outputs.tag }}" > CHANGELOG_TEMP.md
+        echo "## Changes in $TAG" > CHANGELOG_TEMP.md
         echo "" >> CHANGELOG_TEMP.md
+        
+        # Try to get commits since last tag
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 $TAG^ 2>/dev/null || echo "")
+        
+        if [ -n "$PREVIOUS_TAG" ]; then
+          echo "### What's Changed" >> CHANGELOG_TEMP.md
+          echo "" >> CHANGELOG_TEMP.md
+          git log --pretty=format:"- %s" ${PREVIOUS_TAG}..$TAG >> CHANGELOG_TEMP.md
+          echo "" >> CHANGELOG_TEMP.md
+          echo "" >> CHANGELOG_TEMP.md
+        fi
+        
         echo "### Features" >> CHANGELOG_TEMP.md
         echo "- Create Trello tasks directly from Thunderbird emails" >> CHANGELOG_TEMP.md
         echo "- Select from your Trello boards and lists" >> CHANGELOG_TEMP.md
