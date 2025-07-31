@@ -145,17 +145,19 @@ jobs:
 
     - name: Generate changelog
       id: changelog
+      env:
+        TAG: ${{ steps.version.outputs.tag }}
       run: |
-        echo "## Changes in ${{ steps.version.outputs.tag }}" > CHANGELOG_TEMP.md
+        echo "## Changes in $TAG" > CHANGELOG_TEMP.md
         echo "" >> CHANGELOG_TEMP.md
         
         # Try to get commits since last tag
-        PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${{ steps.version.outputs.tag }}^ 2>/dev/null || echo "")
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 $TAG^ 2>/dev/null || echo "")
         
         if [ -n "$PREVIOUS_TAG" ]; then
           echo "### What's Changed" >> CHANGELOG_TEMP.md
           echo "" >> CHANGELOG_TEMP.md
-          git log --pretty=format:"- %s" ${PREVIOUS_TAG}..${{ steps.version.outputs.tag }} >> CHANGELOG_TEMP.md
+          git log --pretty=format:"- %s" ${PREVIOUS_TAG}..$TAG >> CHANGELOG_TEMP.md
           echo "" >> CHANGELOG_TEMP.md
           echo "" >> CHANGELOG_TEMP.md
         fi
