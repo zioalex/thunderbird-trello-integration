@@ -50,5 +50,8 @@
     "webextension"
   ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "sanitize-html": "^2.17.0"
+  }
 }
