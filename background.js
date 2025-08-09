@@ -1,6 +1,7 @@
 // background.js
 // Handles background tasks for the Trello Task Creator extension.
 
+const sanitizeHtml = require('sanitize-html');
 console.log('=== BACKGROUND SCRIPT LOADING ===');
 console.log('Timestamp:', new Date().toISOString());
 console.log('Available browser APIs:', Object.keys(browser || {}));
@@ -136,8 +137,9 @@ function extractBodyFromParts(parts, depth = 0) {
         // If no plain text, try text/html and strip tags
         else if (part.contentType === 'text/html' && part.body && !textContent) {
             console.log(`${indent}  Found text/html content, stripping tags...`);
-            // Simple HTML tag removal (basic)
-            const strippedContent = part.body.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+            // Robust HTML tag removal using sanitize-html
+            const sanitizeHtml = require('sanitize-html');
+            const strippedContent = sanitizeHtml(part.body, { allowedTags: [], allowedAttributes: {} }).replace(/&nbsp;/g, ' ');
             console.log(`${indent}  Stripped HTML, length:`, strippedContent.length);
             textContent = strippedContent;
         }
