@@ -51,11 +51,22 @@ class OptionsManager {
         const tokenUrlDisplay = document.getElementById('token-url-display');
         const tokenUrlDiv = document.getElementById('token-url');
         
-        if (apiKey) {
+        // Only allow alphanumeric API keys (adjust regex as needed for your use case)
+        const apiKeyPattern = /^[a-zA-Z0-9-_]+$/;
+        if (apiKey && apiKeyPattern.test(apiKey)) {
             const tokenUrl = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=Thunderbird%20Extension&key=${apiKey}`;
-            tokenUrlDiv.innerHTML = `<a href="${tokenUrl}" target="_blank">${tokenUrl}</a>`;
+            // Remove previous content
+            tokenUrlDiv.textContent = '';
+            // Create anchor safely
+            const a = document.createElement('a');
+            a.href = tokenUrl;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = tokenUrl;
+            tokenUrlDiv.appendChild(a);
             tokenUrlDisplay.style.display = 'block';
         } else {
+            tokenUrlDiv.textContent = '';
             tokenUrlDisplay.style.display = 'none';
         }
     }
