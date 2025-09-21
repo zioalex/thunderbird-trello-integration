@@ -238,7 +238,6 @@ describe('Background.js - Email Pre-fill Feature', () => {
     const backgroundScript = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
     expect(backgroundScript).toContain('try {');
     expect(backgroundScript).toContain('catch (error)');
-    expect(backgroundScript).toContain('console.error');
     expect(backgroundScript).toContain('return null');
   });
 

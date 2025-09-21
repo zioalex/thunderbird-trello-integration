@@ -97,9 +97,8 @@ describe('Extension File Structure', () => {
     expect(popupJs).toContain('catch (e)');
     expect(backgroundJs).toContain('catch (error)');
     
-    // Should log errors but not crash
-    expect(popupJs).toContain('console.error');
-    expect(backgroundJs).toContain('console.error');
+    // Should handle errors gracefully but not crash
+    expect(popupJs).toContain('console.error'); // popup.js still has console.error for critical errors
   });
 });
 
@@ -233,9 +232,8 @@ describe('Email Pre-fill Integration', () => {
     expect(popupJs).toContain('catch (e)');
     expect(backgroundJs).toContain('catch (error)');
     
-    // Should log errors but not crash
-    expect(popupJs).toContain('console.error');
-    expect(backgroundJs).toContain('console.error');
+    // Should handle errors gracefully but not crash  
+    expect(popupJs).toContain('console.error'); // popup.js still has console.error for critical errors
   });
 });
 

@@ -46,17 +46,35 @@ class OptionsManager {
         });
     }
     
+    // Helper method to validate allowed apiKey format (alphanumeric, 32 chars typical for Trello)
+    isValidApiKey(apiKey) {
+        // Trello API keys are 32-character alphanumerics; this regex can be tuned if needed
+        return /^[a-fA-F0-9]{32}$/.test(apiKey);
+    }
+
     updateTokenUrl() {
         const apiKey = document.getElementById('api-key').value.trim();
         const tokenUrlDisplay = document.getElementById('token-url-display');
         const tokenUrlDiv = document.getElementById('token-url');
         
-        if (apiKey) {
-            const tokenUrl = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=Thunderbird%20Extension&key=${apiKey}`;
-            tokenUrlDiv.innerHTML = `<a href="${tokenUrl}" target="_blank">${tokenUrl}</a>`;
+        // Only show link if apiKey is valid
+        if (this.isValidApiKey(apiKey)) {
+            const tokenUrl = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=Thunderbird%20Extension&key=${encodeURIComponent(apiKey)}`;
+            
+            // Clear existing content
+            tokenUrlDiv.textContent = '';
+            
+            // Create link element safely
+            const linkElement = document.createElement('a');
+            linkElement.href = tokenUrl;
+            linkElement.target = '_blank';
+            linkElement.textContent = tokenUrl;
+            
+            tokenUrlDiv.appendChild(linkElement);
             tokenUrlDisplay.style.display = 'block';
         } else {
-            tokenUrlDisplay.style.display = 'none';
+            tokenUrlDiv.textContent = '';
+            tokenUrlDisplay.style.display = 'none'; 
         }
     }
     
