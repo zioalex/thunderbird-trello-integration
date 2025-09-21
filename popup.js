@@ -344,7 +344,6 @@ class TrelloTaskCreator {
             }
             
             const newLabel = await response.json();
-            console.log('Created new label:', newLabel);
             
             // Add the new label to our local labels array for future reference
             this.labels.push(newLabel);
@@ -378,22 +377,14 @@ class TrelloTaskCreator {
             // Add a small delay to give background script time to initialize
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            console.log('Requesting current message from background script...');
             const message = await browser.runtime.sendMessage({ command: 'get_current_message' });
-            console.log('Received message from background:', message);
 
             if (message && message.subject) {
-                console.log('Setting title to:', message.subject);
                 document.getElementById('task-title').value = message.subject;
-            } else {
-                console.log('No subject found in message');
             }
             
             if (message && message.body) {
-                console.log('Setting description to body, length:', message.body.length);
                 document.getElementById('task-description').value = message.body;
-            } else {
-                console.log('No body found in message');
             }
         } catch (e) {
             console.error(`Error pre-filling task form: ${e}`);
