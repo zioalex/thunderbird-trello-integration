@@ -28,11 +28,11 @@ describe('Manifest.json', () => {
     expect(manifest.description).toBeDefined();
   });
 
-  test('should have proper applications section', () => {
-    expect(manifest.applications).toBeDefined();
-    expect(manifest.applications.gecko).toBeDefined();
-    expect(manifest.applications.gecko.id).toBe('trello-task-creator@thunderbird.addon');
-    expect(manifest.applications.gecko.strict_min_version).toBe('78.0');
+  test('should have proper browser_specific_settings section', () => {
+    expect(manifest.browser_specific_settings).toBeDefined();
+    expect(manifest.browser_specific_settings.gecko).toBeDefined();
+    expect(manifest.browser_specific_settings.gecko.id).toBe('trello-task-creator@thunderbird.addon');
+    expect(manifest.browser_specific_settings.gecko.strict_min_version).toBe('78.0');
   });
 
   test('should have required permissions', () => {

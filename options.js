@@ -53,7 +53,17 @@ class OptionsManager {
         
         if (apiKey) {
             const tokenUrl = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=Thunderbird%20Extension&key=${apiKey}`;
-            tokenUrlDiv.innerHTML = `<a href="${tokenUrl}" target="_blank">${tokenUrl}</a>`;
+            
+            // Clear existing content
+            tokenUrlDiv.textContent = '';
+            
+            // Create link element safely
+            const linkElement = document.createElement('a');
+            linkElement.href = tokenUrl;
+            linkElement.target = '_blank';
+            linkElement.textContent = tokenUrl;
+            
+            tokenUrlDiv.appendChild(linkElement);
             tokenUrlDisplay.style.display = 'block';
         } else {
             tokenUrlDisplay.style.display = 'none';
