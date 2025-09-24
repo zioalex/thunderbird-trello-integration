@@ -237,42 +237,4 @@ describe('Email Pre-fill Integration', () => {
   });
 });
 
-describe('Remember Board/List Integration', () => {
-  const extensionRoot = path.join(__dirname, '..');
-
-  test('should save last-used board and list IDs to storage after task creation', () => {
-    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
-    expect(popupJs).toContain('saveLastUsedSelection');
-    expect(popupJs).toContain('browser.storage.sync.set');
-    expect(popupJs).toContain('lastUsedBoardId');
-    expect(popupJs).toContain('lastUsedListId');
-  });
-
-  test('should load last-used board and list IDs from storage on startup', () => {
-    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
-    expect(popupJs).toContain('browser.storage.sync.get');
-    expect(popupJs).toContain('lastUsedBoardId');
-    expect(popupJs).toContain('lastUsedListId');
-  });
-
-  test('should pre-select board and list from stored IDs', () => {
-    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
-    expect(popupJs).toContain('option.selected = true');
-    expect(popupJs).toContain('this.lastUsedBoardId');
-    expect(popupJs).toContain('this.lastUsedListId');
-  });
-
-  test('should handle cases where no previous selection is stored', () => {
-    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
-    expect(popupJs).toContain('this.lastUsedBoardId = result.lastUsedBoardId || \'\'');
-    expect(popupJs).toContain('this.lastUsedListId = result.lastUsedListId || \'\'');
-  });
-
-  test('should handle errors in storage operations gracefully', () => {
-    const popupJs = fs.readFileSync(path.join(extensionRoot, 'popup.js'), 'utf8');
-    expect(popupJs).toContain('catch (error)');
-    expect(popupJs).toContain('console.error');
-    expect(popupJs).toContain('Error loading config');
-    expect(popupJs).toContain('Error saving last used selection');
-  });
-});
+// Removed duplicate 'Remember Board/List Integration' describe block.
