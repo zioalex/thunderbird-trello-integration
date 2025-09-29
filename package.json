@@ -19,7 +19,7 @@
     "release:tag": "./scripts/create-release.sh"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
+    "@jest/globals": "^30.2.0",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
