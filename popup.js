@@ -129,7 +129,7 @@ class TrelloTaskCreator {
         const day = String(date.getDate()).padStart(2, '0');
         const formatted = `${year}-${month}-${day}`;
 
-        document.getElementById('task-due-date').value = formatted;
+        document.getElementById('task-due-date').value = formatted;npm run version:major
     }
 
     /**
@@ -419,7 +419,7 @@ class TrelloTaskCreator {
             const dueDate = document.getElementById('task-due-date').value;
             if (dueDate) {
                 // Convert YYYY-MM-DD to ISO 8601 format (with time set to end of day)
-                const dueDateObj = new Date(dueDate + 'T23:59:59');
+                const dueDateObj = new Date(dueDate + 'T23:59:59Z');
                 cardPayload.due = dueDateObj.toISOString();
             }
             

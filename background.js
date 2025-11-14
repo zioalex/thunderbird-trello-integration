@@ -120,7 +120,7 @@ function decodeHtmlEntities(text) {
 
     let decoded = text;
     for (const [entity, char] of Object.entries(entities)) {
-        decoded = decoded.replace(new RegExp(entity, 'g'), char);
+        decoded = decoded.replaceAll(entity, char);
     }
 
     // Decode numeric entities (&#123; or &#xAB;)
