@@ -185,18 +185,6 @@ function htmlToMarkdown(html) {
     text = text.replace(/<\/p>/gi, '\n\n');
     text = text.replace(/<p[^>]*>/gi, '');
 
-    // Handle <pre><code> pattern (common in code snippets)
-    text = text.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (match, codeContent) => {
-        // Remove any <code> tags inside the code block (shouldn't be any, but just in case)
-        codeContent = codeContent.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '$1');
-        return '\n```\n' + codeContent + '\n```\n';
-    });
-    // Then handle remaining <pre> tags
-    text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (match, preContent) => {
-        // Remove any <code> tags inside the code block
-        preContent = preContent.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '$1');
-        return '\n```\n' + preContent + '\n```\n';
-    });
     // Convert inline code: <code> -> `code`
     text = text.replace(/<code>(.*?)<\/code>/gi, '`$1`');
 
