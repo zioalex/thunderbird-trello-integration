@@ -1,6 +1,6 @@
 {
   "name": "trello-task-creator-thunderbird",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Thunderbird extension to create Trello tasks",
   "scripts": {
     "test": "jest",
@@ -23,7 +23,7 @@
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "web-ext": "^8.9.0"
+    "web-ext": "^9.1.0"
   },
   "jest": {
     "testEnvironment": "jsdom",
@@ -38,6 +38,9 @@
       "!jest.config.js",
       "!coverage/**"
     ]
+  },
+  "overrides": {
+    "js-yaml": "^4.1.1"
   },
   "repository": {
     "type": "git",

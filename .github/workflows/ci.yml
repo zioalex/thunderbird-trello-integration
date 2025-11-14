@@ -41,13 +41,27 @@ jobs:
       run: npm ci
       
     - name: Run ESLint
-      run: npm run lint
-      
+      run: |
+        echo "🔍 Running ESLint..."
+        npm run lint || {
+          echo ""
+          echo "❌ LINTING FAILED!"
+          echo "Run 'npm run lint' locally to see details"
+          echo "Run 'npm run lint:fix' to attempt automatic fixes"
+          exit 1
+        }
+        echo "✅ Linting passed"
+
     - name: Run all tests with coverage
       run: |
         echo "🧪 Running all test suites..."
-        npm run test:coverage -- --verbose
-        echo "✅ All tests completed"
+        npm run test:coverage -- --verbose || {
+          echo ""
+          echo "❌ TESTS FAILED!"
+          echo "Run 'npm test' locally to see details"
+          exit 1
+        }
+        echo "✅ All tests completed successfully"
         
     - name: Display test results summary
       run: |
@@ -69,7 +83,8 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage/lcov.info
-        fail_ci_if_error: false
+        fail_ci_if_error: true
+      continue-on-error: true  # Don't fail the build if codecov is down, but log the error
 
   test-report:
     name: Comprehensive Test Report
@@ -233,20 +248,45 @@ jobs:
       run: npm ci
       
     - name: Build extension package
-      run: npm run package
-      
+      run: |
+        echo "📦 Building extension package..."
+        npm run package || {
+          echo ""
+          echo "❌ PACKAGE BUILD FAILED!"
+          echo "Check the build logs above for details"
+          exit 1
+        }
+        echo "✅ Package built successfully"
+
     - name: Verify package contents
       run: |
-        echo "Verifying package contents..."
-        unzip -l trello-task-creator-extension.zip
-        
-        # Check that manifest.json is at root level
-        if unzip -l trello-task-creator-extension.zip | grep -q "manifest.json$"; then
-          echo "✓ manifest.json is at root level"
-        else
-          echo "✗ manifest.json not found at root level"
+        echo "🔍 Verifying package contents..."
+
+        # Check if package exists
+        if [ ! -f "trello-task-creator-extension.zip" ]; then
+          echo "❌ Package file not found!"
           exit 1
         fi
+
+        echo "📋 Package contents:"
+        unzip -l trello-task-creator-extension.zip
+
+        # Check that manifest.json is at root level
+        if unzip -l trello-task-creator-extension.zip | grep -q "manifest.json$"; then
+          echo "✅ manifest.json is at root level"
+        else
+          echo "❌ manifest.json not found at root level"
+          exit 1
+        fi
+
+        # Verify package is not empty
+        SIZE=$(stat -f%z "trello-task-creator-extension.zip" 2>/dev/null || stat -c%s "trello-task-creator-extension.zip" 2>/dev/null)
+        if [ "$SIZE" -lt 1000 ]; then
+          echo "❌ Package file is too small ($SIZE bytes) - likely corrupt or empty"
+          exit 1
+        fi
+
+        echo "✅ Package verification passed (size: $SIZE bytes)"
         
     - name: Upload extension artifact
       uses: actions/upload-artifact@v4
@@ -296,17 +336,45 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Run npm audit
-      run: npm audit --audit-level=moderate
-      continue-on-error: true
-      
+    - name: Run npm audit (check for vulnerabilities)
+      run: |
+        echo "🔍 Running npm audit for security vulnerabilities..."
+        npm audit --audit-level=moderate || {
+          EXIT_CODE=$?
+          echo ""
+          echo "❌ SECURITY VULNERABILITIES DETECTED!"
+          echo "Run 'npm audit' locally to see details"
+          echo "Run 'npm audit fix' to attempt automatic fixes"
+          echo ""
+          exit $EXIT_CODE
+        }
+        echo "✅ No moderate or higher severity vulnerabilities found"
+
     - name: Check for secrets in code
       run: |
-        echo "Scanning for potential secrets..."
-        if grep -r -i "api.key\|password\|secret\|token" *.js --exclude-dir=node_modules --exclude-dir=tests; then
-          echo "⚠️ Potential secrets found in code - please review"
+        echo "🔍 Scanning for potential secrets in code..."
+
+        # Search for potential secrets, excluding test files and node_modules
+        FINDINGS=$(grep -r -n -i \
+          -e "api[_-]key\s*=\s*['\"][^'\"]\+" \
+          -e "password\s*=\s*['\"][^'\"]\+" \
+          -e "secret\s*=\s*['\"][^'\"]\+" \
+          -e "token\s*=\s*['\"][^'\"]\+" \
+          --include="*.js" \
+          --exclude-dir=node_modules \
+          --exclude-dir=tests \
+          --exclude-dir=coverage \
+          . || true)
+
+        if [ -n "$FINDINGS" ]; then
+          echo "❌ POTENTIAL SECRETS FOUND IN CODE:"
+          echo "$FINDINGS"
+          echo ""
+          echo "⚠️  Please review the above findings and ensure no real credentials are committed."
+          echo "⚠️  Use environment variables or config files (that are gitignored) for secrets."
+          exit 1
         else
-          echo "✓ No obvious secrets found in code"
+          echo "✅ No obvious secrets found in code"
         fi
 
   auto-tag:

@@ -1,7 +1,23 @@
 // popup.js
 // Handles the popup interface for creating Trello tasks
 
+// Cache configuration
+
+
+
+
+
+
+
+
 class TrelloTaskCreator {
+    static CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+    static CACHE_KEYS = {
+        BOARDS: 'cached_boards',
+        BOARDS_TIMESTAMP: 'cached_boards_timestamp',
+        LISTS: 'cached_lists_',
+        LISTS_TIMESTAMP: 'cached_lists_timestamp_'
+    };
     constructor() {
         this.apiKey = '';
         this.token = '';
@@ -12,7 +28,7 @@ class TrelloTaskCreator {
         this.labels = [];
         this.lastUsedBoardId = '';
         this.lastUsedListId = '';
-        
+
         this.init();
     }
     
@@ -51,23 +67,45 @@ class TrelloTaskCreator {
         document.getElementById('board-select').addEventListener('change', (e) => {
             this.onBoardChange(e.target.value);
         });
-        
+
         // Label selection (show/hide new label form)
         document.getElementById('label-select').addEventListener('change', (e) => {
             this.onLabelSelectionChange(e.target.value);
         });
-        
+
+        // Refresh boards button
+        document.getElementById('refresh-boards').addEventListener('click', () => {
+            this.refreshBoards();
+        });
+
+        // Quick date buttons
+        document.getElementById('due-tomorrow').addEventListener('click', () => {
+            this.setQuickDate(1);
+        });
+
+        document.getElementById('due-next-week').addEventListener('click', () => {
+            this.setQuickDate(7);
+        });
+
+        document.getElementById('due-next-month').addEventListener('click', () => {
+            this.setQuickDate(30);
+        });
+
+        document.getElementById('due-clear').addEventListener('click', () => {
+            document.getElementById('task-due-date').value = '';
+        });
+
         // Create task button
         document.getElementById('create-task').addEventListener('click', () => {
             this.createTask();
         });
-        
+
         // Settings links
         document.getElementById('open-options').addEventListener('click', (e) => {
             e.preventDefault();
             this.openOptions();
         });
-        
+
         document.getElementById('open-options-link').addEventListener('click', (e) => {
             e.preventDefault();
             this.openOptions();
@@ -83,22 +121,99 @@ class TrelloTaskCreator {
         document.getElementById('config-needed').style.display = 'none';
         document.getElementById('task-form').style.display = 'block';
     }
-    
-    async loadBoards() {
+
+    /**
+     * Set quick date by adding days to current date
+     * @param {number} days - Number of days to add
+     */
+    setQuickDate(days) {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+
+        // Format date as YYYY-MM-DD for input[type="date"]
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formatted = `${year}-${month}-${day}`;
+
+        document.getElementById('task-due-date').value = formatted;
+    }
+
+    /**
+     * Check if cached data is still valid
+     * @param {number} timestamp - Cached timestamp
+     * @returns {boolean} - True if cache is still valid
+     */
+    isCacheValid(timestamp) {
+        if (!timestamp) return false;
+        const now = Date.now();
+        return (now - timestamp) < TrelloTaskCreator.CACHE_DURATION;
+    }
+
+    /**
+     * Get boards from cache or API
+     * @param {boolean} forceRefresh - Force fetch from API even if cache is valid
+     * @returns {Promise<boolean>} - Returns true on success, false on failure
+     */
+    async loadBoards(forceRefresh = false) {
         try {
+            // Try to load from cache first
+            if (!forceRefresh) {
+                const cachedData = await browser.storage.local.get([
+                    TrelloTaskCreator.CACHE_KEYS.BOARDS,
+                    TrelloTaskCreator.CACHE_KEYS.BOARDS_TIMESTAMP
+                ]);
+
+                if (cachedData[TrelloTaskCreator.CACHE_KEYS.BOARDS] &&
+                    this.isCacheValid(cachedData[TrelloTaskCreator.CACHE_KEYS.BOARDS_TIMESTAMP])) {
+                    this.boards = cachedData[TrelloTaskCreator.CACHE_KEYS.BOARDS];
+                    this.populateBoardSelect();
+                    return true;
+                }
+            }
+
+            // Fetch from API if cache is invalid or force refresh
             const response = await fetch(
                 `https://api.trello.com/1/members/me/boards?key=${this.apiKey}&token=${this.token}`
             );
-            
+
             if (!response.ok) {
                 throw new Error('Failed to load boards');
             }
-            
+
             this.boards = await response.json();
+
+            // Cache the boards data
+            await browser.storage.local.set({
+                [TrelloTaskCreator.CACHE_KEYS.BOARDS]: this.boards,
+                [TrelloTaskCreator.CACHE_KEYS.BOARDS_TIMESTAMP]: Date.now()
+            });
+
             this.populateBoardSelect();
+            return true;
         } catch (error) {
             console.error('Error loading boards:', error);
             this.showMessage('Error loading boards. Please check your API credentials.', 'error');
+            return false;
+        }
+    }
+
+    /**
+     * Refresh boards by forcing a fetch from API
+     */
+    async refreshBoards() {
+        const refreshBtn = document.getElementById('refresh-boards');
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('spinning');
+
+        try {
+            const success = await this.loadBoards(true);
+            if (success) {
+                this.showMessage('Boards refreshed successfully!', 'success');
+            }
+        } finally {
+            refreshBtn.disabled = false;
+            refreshBtn.classList.remove('spinning');
         }
     }
     
@@ -140,17 +255,44 @@ class TrelloTaskCreator {
         ]);
     }
     
-    async loadLists(boardId) {
+    /**
+     * Get lists for a board from cache or API
+     * @param {string} boardId - The board ID
+     * @param {boolean} forceRefresh - Force fetch from API even if cache is valid
+     */
+    async loadLists(boardId, forceRefresh = false) {
         try {
+            const cacheKey = TrelloTaskCreator.CACHE_KEYS.LISTS + boardId;
+            const timestampKey = TrelloTaskCreator.CACHE_KEYS.LISTS_TIMESTAMP + boardId;
+
+            // Try to load from cache first
+            if (!forceRefresh) {
+                const cachedData = await browser.storage.local.get([cacheKey, timestampKey]);
+
+                if (cachedData[cacheKey] && this.isCacheValid(cachedData[timestampKey])) {
+                    this.lists = cachedData[cacheKey];
+                    this.populateListSelect();
+                    return;
+                }
+            }
+
+            // Fetch from API if cache is invalid or force refresh
             const response = await fetch(
                 `https://api.trello.com/1/boards/${boardId}/lists?key=${this.apiKey}&token=${this.token}`
             );
-            
+
             if (!response.ok) {
                 throw new Error('Failed to load lists');
             }
-            
+
             this.lists = await response.json();
+
+            // Cache the lists data
+            await browser.storage.local.set({
+                [cacheKey]: this.lists,
+                [timestampKey]: Date.now()
+            });
+
             this.populateListSelect();
         } catch (error) {
             console.error('Error loading lists:', error);
@@ -274,10 +416,18 @@ class TrelloTaskCreator {
                 desc: description,
                 idList: listId
             };
-            
+
             // Add user's label if selected
             if (userLabelId) {
                 cardPayload.idLabels = [userLabelId];
+            }
+
+            // Add due date if selected
+            const dueDate = document.getElementById('task-due-date').value;
+            if (dueDate) {
+                // Convert YYYY-MM-DD to ISO 8601 format (with time set to end of day)
+                const dueDateObj = new Date(dueDate + 'T23:59:59Z');
+                cardPayload.due = dueDateObj.toISOString();
             }
             
             const response = await fetch(
@@ -309,6 +459,7 @@ class TrelloTaskCreator {
             // Clear form
             document.getElementById('task-title').value = '';
             document.getElementById('task-description').value = '';
+            document.getElementById('task-due-date').value = '';
             document.getElementById('label-select').value = '';
             document.getElementById('new-label-name').value = '';
             document.getElementById('new-label-group').style.display = 'none';

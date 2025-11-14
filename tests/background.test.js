@@ -133,7 +133,7 @@ describe('Background.js - Email Pre-fill Feature', () => {
       expect(result).toBe('This is plain text content');
     });
 
-    test('should extract and strip text/html content when no plain text', () => {
+    test('should extract and convert text/html content when no plain text', () => {
       const parts = [
         {
           contentType: 'text/html',
@@ -141,7 +141,7 @@ describe('Background.js - Email Pre-fill Feature', () => {
         }
       ];
       const result = extractBodyFromParts(parts);
-      expect(result).toBe('This is HTML content');
+      expect(result).toBe('This is **HTML** content'); // Bold is preserved as markdown
     });
 
     test('should concatenate all text content found', () => {

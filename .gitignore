@@ -101,7 +101,7 @@ Thumbs.db
 # Extension specific
 web-ext-artifacts/
 *.zip
-!trello-task-creator-extension.zip
+trello-task-creator-extension.zip
 
 # SVG source files (keep PNGs)
 *.svg

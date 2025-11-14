@@ -10,22 +10,35 @@ describe('E2E: Email Pre-fill Feature', () => {
     const mockElements = {
       'task-title': { value: '' },
       'task-description': { value: '' },
-      'board-select': { 
-        value: '', 
+      'board-select': {
+        value: '',
         addEventListener: jest.fn(),
         innerHTML: '',
         appendChild: jest.fn()
       },
-      'list-select': { 
+      'list-select': {
         value: '',
         innerHTML: '',
         appendChild: jest.fn()
       },
-      'create-task': { 
+      'create-task': {
         addEventListener: jest.fn(),
         disabled: false,
         textContent: 'Create Task'
       },
+      'refresh-boards': {
+        addEventListener: jest.fn(),
+        disabled: false,
+        classList: {
+          add: jest.fn(),
+          remove: jest.fn()
+        }
+      },
+      'task-due-date': { value: '' },
+      'due-tomorrow': { addEventListener: jest.fn() },
+      'due-next-week': { addEventListener: jest.fn() },
+      'due-next-month': { addEventListener: jest.fn() },
+      'due-clear': { addEventListener: jest.fn() },
       'open-options': { addEventListener: jest.fn() },
       'open-options-link': { addEventListener: jest.fn() },
       'config-needed': { style: { display: 'none' } },
@@ -61,6 +74,10 @@ describe('E2E: Email Pre-fill Feature', () => {
       trelloApiKey: 'test-api-key',
       trelloToken: 'test-token'
     });
+
+    // Mock browser storage local for cache (empty by default)
+    global.browser.storage.local.get.mockResolvedValue({});
+    global.browser.storage.local.set.mockResolvedValue(undefined);
 
     // Mock successful fetch responses for boards
     global.fetch.mockImplementation((url) => {

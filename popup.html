@@ -75,6 +75,84 @@
             text-decoration: none;
             font-size: 12px;
         }
+
+        .select-with-refresh {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .select-with-refresh select {
+            flex: 1;
+        }
+
+        .refresh-btn {
+            background-color: #f4f5f7;
+            color: #172b4d;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: auto;
+            min-width: 40px;
+        }
+
+        .refresh-btn:hover {
+            background-color: #e4e6e9;
+        }
+
+        .refresh-btn:disabled {
+            background-color: #f4f5f7;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .refresh-btn.spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .quick-dates {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background-color: #f4f5f7;
+            color: #172b4d;
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .quick-date-btn:hover {
+            background-color: #e4e6e9;
+        }
+
+        .quick-date-btn:active {
+            background-color: #d4d6d9;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -88,9 +166,12 @@
     <div id="task-form">
         <div class="form-group">
             <label for="board-select">Board:</label>
-            <select id="board-select">
-                <option value="">Loading boards...</option>
-            </select>
+            <div class="select-with-refresh">
+                <select id="board-select">
+                    <option value="">Loading boards...</option>
+                </select>
+                <button type="button" class="refresh-btn" id="refresh-boards" title="Refresh boards">↻</button>
+            </div>
         </div>
         
         <div class="form-group">
@@ -135,7 +216,18 @@
             <label for="task-description">Description:</label>
             <textarea id="task-description" placeholder="Enter task description (optional)"></textarea>
         </div>
-        
+
+        <div class="form-group">
+            <label for="task-due-date">Due Date (optional):</label>
+            <input type="date" id="task-due-date" placeholder="Select due date">
+            <div class="quick-dates">
+                <button type="button" class="quick-date-btn" id="due-tomorrow">Tomorrow</button>
+                <button type="button" class="quick-date-btn" id="due-next-week">Next Week</button>
+                <button type="button" class="quick-date-btn" id="due-next-month">Next Month</button>
+                <button type="button" class="quick-date-btn" id="due-clear">Clear</button>
+            </div>
+        </div>
+
         <button id="create-task">Create Task</button>
         
         <div id="message"></div>

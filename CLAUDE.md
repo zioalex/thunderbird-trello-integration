@@ -17,6 +17,58 @@ npm run lint:fix           # Auto-fix linting issues
 npm run validate           # Run both lint and test
 ```
 
+### Security Auditing
+
+**IMPORTANT**: Always run npm audit after making changes to dependencies or at the start of any work session.
+
+```bash
+npm audit                   # Check for security vulnerabilities
+npm audit fix              # Automatically fix vulnerabilities without breaking changes
+npm audit fix --force      # Fix all vulnerabilities (may include breaking changes)
+```
+
+**When to run npm audit:**
+- After installing or updating any dependencies
+- At the beginning of each work session
+- Before committing changes
+- Before creating releases
+
+**Target security level:**
+- **Zero vulnerabilities** is the goal
+- All moderate and higher severity issues must be fixed
+- Use npm overrides in package.json if direct updates aren't available
+- Document any remaining low severity issues that can't be fixed
+
+**If vulnerabilities are found:**
+1. Run `npm audit fix` first (safe, non-breaking fixes)
+2. Review remaining vulnerabilities
+3. Update specific packages if needed
+4. Use package.json "overrides" field for transitive dependencies
+5. Verify all tests still pass after fixes
+6. Commit security fixes separately with clear message
+
+**Example workflow:**
+```bash
+# 1. Check for vulnerabilities
+npm audit
+
+# 2. Fix what can be fixed safely
+npm audit fix
+
+# 3. Check if more vulnerabilities remain
+npm audit
+
+# 4. If needed, update specific packages or add overrides
+npm install --save-dev package-name@latest
+
+# 5. Verify everything still works
+npm run validate
+
+# 6. Commit the fixes
+git add package.json package-lock.json
+git commit -m "Fix security vulnerabilities - 0 vulnerabilities remaining"
+```
+
 ### Building & Packaging
 ```bash
 npm run package            # Create extension ZIP file
@@ -24,17 +76,44 @@ npm run build              # Run validation then package
 ```
 
 ### Version Management
+
+**IMPORTANT**: Always run version bump after completing and committing your changes.
+
 ```bash
-npm run version:patch      # Bump patch version (1.1.0 → 1.1.1)
-npm run version:minor      # Bump minor version (1.1.0 → 1.2.0)
-npm run version:major      # Bump major version (1.1.0 → 2.0.0)
+npm run version:patch      # Bump patch version (1.1.0 → 1.1.1) - Bug fixes
+npm run version:minor      # Bump minor version (1.1.0 → 1.2.0) - New features
+npm run version:major      # Bump major version (1.1.0 → 2.0.0) - Breaking changes
 ```
 
-The version script automatically:
-- Updates both package.json and manifest.json
-- Commits changes with standardized message
-- Pushes to remote repository
-- Triggers CI/CD to create git tags and releases
+**When to use each version type:**
+- **patch**: Bug fixes, small improvements, test additions (no new features)
+- **minor**: New features, enhancements (backwards compatible)
+- **major**: Breaking changes, major refactors
+
+**The version script (`scripts/bump-version.sh`) automatically:**
+1. Updates package.json version
+2. Updates manifest.json version
+3. Updates tests/manifest.test.js expected version
+4. Commits changes with message "Bump version to X.Y.Z"
+5. Pushes to remote repository
+6. Triggers CI/CD to create git tags and releases
+
+**Interactive Process:**
+- Script will show a confirmation prompt before proceeding
+- Type `y` to confirm or `n` to cancel
+- Use `echo "y" | npm run version:patch` for automated confirmation
+
+**Example workflow:**
+```bash
+# 1. Make your changes and commit them
+git add .
+git commit -m "Fix HTML extraction bugs"
+
+# 2. Bump version (this creates a new commit)
+npm run version:patch
+
+# 3. Version is now updated and pushed automatically
+```
 
 ## Architecture
 
@@ -42,11 +121,14 @@ The version script automatically:
 
 **popup.js (TrelloTaskCreator class)**
 - Main user interface logic
-- Manages board/list/label selection
+- Manages board/list/label selection with caching for performance
 - Handles task creation workflow
 - Implements "remember last selection" feature
 - Pre-fills task form from currently displayed email via background script
 - Automatically adds "thunderbird-email" label to created cards
+- Provides due date selection with quick date buttons (tomorrow, next week, next month)
+- Implements board/list caching with 5-minute TTL using browser.storage.local
+- Includes refresh button to bypass cache and force-reload boards/lists
 
 **background.js**
 - Retrieves current email content using browser.messages.getFull() API
@@ -78,6 +160,18 @@ Stored in `browser.storage.sync`:
 - `lastUsedBoardId` - Last selected board ID
 - `lastUsedListId` - Last selected list ID
 
+Stored in `browser.storage.local` (for caching):
+- `cached_boards` - Cached board list from Trello API
+- `cached_boards_timestamp` - Timestamp of when boards were cached
+- `cached_lists_{boardId}` - Cached list data for specific board
+- `cached_lists_timestamp_{boardId}` - Timestamp of when lists were cached
+
+**Cache Configuration:**
+- Cache duration: 5 minutes (300,000 milliseconds)
+- Cache is automatically checked on each load
+- Refresh button in UI allows users to bypass cache and force-reload data
+- Separate cache entries maintained for each board's lists
+
 ## Testing Strategy
 
 The test suite uses Jest with jsdom environment:
@@ -89,6 +183,9 @@ The test suite uses Jest with jsdom environment:
 - **integration.test.js** - Cross-component integration
 - **e2e-prefill.test.js** - Email auto-fill feature
 - **e2e-remember.test.js** - "Remember selection" feature
+- **popup-cache.test.js** - Board/list caching functionality
+- **html-extraction.test.js** - HTML to Markdown conversion
+- **due-date.test.js** - Due date functionality
 
 Test setup mocks browser APIs (browser.storage, browser.runtime, browser.messages) in tests/setup.js.
 
@@ -123,7 +220,7 @@ browser.messages.getFull(messageId) → extractBodyFromParts(parts)
 
 The extraction function:
 - Prefers text/plain parts for body content
-- Falls back to text/html with basic tag stripping if no plain text available
+- Falls back to text/html with markdown conversion if no plain text available
 - Recursively traverses nested message parts
 
 Content is formatted with:
@@ -153,6 +250,7 @@ Both package.json and manifest.json must maintain identical version numbers. The
 
 ## Contribution Guidelines
 
+- Always create a new branch for each feature or bugfix
 - Be sure to run tests and validation before submitting PRs
 - Follow existing code style and patterns
 - Update documentation as needed for new features
