@@ -4,7 +4,7 @@ require('./setup.js');
 describe('Due Date Functionality', () => {
   let mockDocument;
   let dueDateInput;
-  let ttrelloTaskCreator;
+  let trelloTaskCreator;
 
   beforeEach(() => {
     // Create a mock due date input element
