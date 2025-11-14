@@ -153,6 +153,7 @@ Both package.json and manifest.json must maintain identical version numbers. The
 
 ## Contribution Guidelines
 
+- Always create a new branch for each feature or bugfix
 - Be sure to run tests and validation before submitting PRs
 - Follow existing code style and patterns
 - Update documentation as needed for new features

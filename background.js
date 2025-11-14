@@ -97,6 +97,108 @@ function formatEmailForTrello(body, message) {
 }
 
 /**
+ * Decode common HTML entities
+ * @param {string} text - Text with HTML entities
+ * @returns {string} Decoded text
+ */
+function decodeHtmlEntities(text) {
+    const entities = {
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&quot;': '"',
+        '&apos;': "'",
+        '&nbsp;': ' ',
+        '&ndash;': '–',
+        '&mdash;': '—',
+        '&hellip;': '...',
+        '&copy;': '©',
+        '&reg;': '®',
+        '&trade;': '™',
+        '&#39;': "'"
+    };
+
+    let decoded = text;
+    for (const [entity, char] of Object.entries(entities)) {
+        decoded = decoded.replace(new RegExp(entity, 'g'), char);
+    }
+
+    // Decode numeric entities (&#123; or &#xAB;)
+    decoded = decoded.replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+    decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (match, hex) => String.fromCharCode(parseInt(hex, 16)));
+
+    return decoded;
+}
+
+/**
+ * Convert HTML to Markdown-style formatting
+ * @param {string} html - HTML content
+ * @returns {string} Markdown-formatted text
+ */
+function htmlToMarkdown(html) {
+    let text = html;
+
+    // Convert links: <a href="url">text</a> -> [text](url)
+    text = text.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
+
+    // Convert bold: <b> or <strong> -> **text**
+    text = text.replace(/<(b|strong)>(.*?)<\/\1>/gi, '**$2**');
+
+    // Convert italic: <i> or <em> -> *text*
+    text = text.replace(/<(i|em)>(.*?)<\/\1>/gi, '*$2*');
+
+    // Convert headers: <h1-6> -> # text
+    text = text.replace(/<h1>(.*?)<\/h1>/gi, '\n# $1\n');
+    text = text.replace(/<h2>(.*?)<\/h2>/gi, '\n## $1\n');
+    text = text.replace(/<h3>(.*?)<\/h3>/gi, '\n### $1\n');
+
+    // Convert unordered lists: <ul><li> -> - item
+    text = text.replace(/<ul[^>]*>/gi, '\n');
+    text = text.replace(/<\/ul>/gi, '\n');
+    text = text.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
+
+    // Convert ordered lists: <ol><li> -> 1. item
+    let olCounter = 0;
+    text = text.replace(/<ol[^>]*>/gi, () => {
+        olCounter = 0;
+        return '\n';
+    });
+    text = text.replace(/<\/ol>/gi, '\n');
+    text = text.replace(/<li[^>]*>(.*?)<\/li>/g, (match, content) => {
+        olCounter++;
+        return `${olCounter}. ${content}\n`;
+    });
+
+    // Convert line breaks: <br> -> \n
+    text = text.replace(/<br\s*\/?>/gi, '\n');
+
+    // Convert paragraphs: <p> -> double newline
+    text = text.replace(/<\/p>/gi, '\n\n');
+    text = text.replace(/<p[^>]*>/gi, '');
+
+    // Convert code blocks: <pre> or <code>
+    text = text.replace(/<pre[^>]*>(.*?)<\/pre>/gis, '\n```\n$1\n```\n');
+    text = text.replace(/<code>(.*?)<\/code>/gi, '`$1`');
+
+    // Convert blockquotes: <blockquote> -> > text
+    text = text.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gis, (match, content) => {
+        return '\n> ' + content.trim().replace(/\n/g, '\n> ') + '\n';
+    });
+
+    // Remove remaining HTML tags
+    text = text.replace(/<[^>]*>/g, '');
+
+    // Decode HTML entities
+    text = decodeHtmlEntities(text);
+
+    // Clean up excessive whitespace
+    text = text.replace(/\n{4,}/g, '\n\n\n');
+    text = text.replace(/[ \t]+/g, ' ');
+
+    return text.trim();
+}
+
+/**
  * Helper function to extract text body from message parts
  * @param {Array} parts - Message parts array
  * @param {number} depth - Recursion depth for logging
@@ -104,19 +206,17 @@ function formatEmailForTrello(body, message) {
  */
 function extractBodyFromParts(parts, depth = 0) {
     let textContent = '';
-    
+
     for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
-        
+
         // Look for text/plain parts first
         if (part.contentType === 'text/plain' && part.body) {
             textContent += part.body;
         }
-        // If no plain text, try text/html and strip tags
+        // If no plain text, try text/html and convert to markdown
         else if (part.contentType === 'text/html' && part.body && !textContent) {
-            // Simple HTML tag removal (basic)
-            const strippedContent = part.body.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
-            textContent = strippedContent;
+            textContent = htmlToMarkdown(part.body);
         }
         // Recursively check nested parts
         else if (part.parts && part.parts.length > 0) {
@@ -126,7 +226,7 @@ function extractBodyFromParts(parts, depth = 0) {
             }
         }
     }
-    
+
     return textContent;
 }
 
@@ -225,5 +325,11 @@ browser.runtime.onMessage.addListener(async (request, _sender, _sendResponse) =>
 
 // Export for testing only - not used by the extension itself
 if (typeof exports === 'object' && typeof module === 'object') {
-    module.exports = { getCurrentMessage, formatEmailForTrello, extractBodyFromParts };
+    module.exports = {
+        getCurrentMessage,
+        formatEmailForTrello,
+        extractBodyFromParts,
+        decodeHtmlEntities,
+        htmlToMarkdown
+    };
 }
