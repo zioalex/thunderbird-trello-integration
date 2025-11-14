@@ -124,8 +124,9 @@ function decodeHtmlEntities(text) {
     }
 
     // Decode numeric entities (&#123; or &#xAB;)
-    decoded = decoded.replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-    decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (match, hex) => String.fromCharCode(parseInt(hex, 16)));
+    // Use String.fromCodePoint to support unicode characters above 0xFFFF (like emojis)
+    decoded = decoded.replace(/&#(\d+);/g, (match, dec) => String.fromCodePoint(dec));
+    decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (match, hex) => String.fromCodePoint(parseInt(hex, 16)));
 
     return decoded;
 }
@@ -137,6 +138,10 @@ function decodeHtmlEntities(text) {
  */
 function htmlToMarkdown(html) {
     let text = html;
+
+    // Convert code blocks first (before other processing that might interfere)
+    // <pre> -> ```code```
+    text = text.replace(/<pre[^>]*>(.*?)<\/pre>/gis, '\n```\n$1\n```\n');
 
     // Convert links: <a href="url">text</a> -> [text](url)
     text = text.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
@@ -152,21 +157,22 @@ function htmlToMarkdown(html) {
     text = text.replace(/<h2>(.*?)<\/h2>/gi, '\n## $1\n');
     text = text.replace(/<h3>(.*?)<\/h3>/gi, '\n### $1\n');
 
-    // Convert unordered lists: <ul><li> -> - item
-    text = text.replace(/<ul[^>]*>/gi, '\n');
-    text = text.replace(/<\/ul>/gi, '\n');
-    text = text.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
-
-    // Convert ordered lists: <ol><li> -> 1. item
+    // Convert ordered lists FIRST (before unordered lists)
+    // <ol><li> -> 1. item
     let olCounter = 0;
-    text = text.replace(/<ol[^>]*>/gi, () => {
+    text = text.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, content) => {
         olCounter = 0;
-        return '\n';
+        const converted = content.replace(/<li[^>]*>(.*?)<\/li>/gi, (liMatch, liContent) => {
+            olCounter++;
+            return `${olCounter}. ${liContent}\n`;
+        });
+        return '\n' + converted + '\n';
     });
-    text = text.replace(/<\/ol>/gi, '\n');
-    text = text.replace(/<li[^>]*>(.*?)<\/li>/g, (match, content) => {
-        olCounter++;
-        return `${olCounter}. ${content}\n`;
+
+    // Convert unordered lists: <ul><li> -> - item
+    text = text.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (match, content) => {
+        const converted = content.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
+        return '\n' + converted + '\n';
     });
 
     // Convert line breaks: <br> -> \n
@@ -176,8 +182,7 @@ function htmlToMarkdown(html) {
     text = text.replace(/<\/p>/gi, '\n\n');
     text = text.replace(/<p[^>]*>/gi, '');
 
-    // Convert code blocks: <pre> or <code>
-    text = text.replace(/<pre[^>]*>(.*?)<\/pre>/gis, '\n```\n$1\n```\n');
+    // Convert inline code: <code> -> `code`
     text = text.replace(/<code>(.*?)<\/code>/gi, '`$1`');
 
     // Convert blockquotes: <blockquote> -> > text
