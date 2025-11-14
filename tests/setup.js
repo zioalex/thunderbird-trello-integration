@@ -26,7 +26,7 @@ global.browser = {
     getDisplayedMessage: jest.fn(),
   },
   messages: {
-    getPlainBody: jest.fn(),
+    getFull: jest.fn(),
   },
 };
 
