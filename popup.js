@@ -2,15 +2,22 @@
 // Handles the popup interface for creating Trello tasks
 
 // Cache configuration
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-const CACHE_KEYS = {
-    BOARDS: 'cached_boards',
-    BOARDS_TIMESTAMP: 'cached_boards_timestamp',
-    LISTS: 'cached_lists_',
-    LISTS_TIMESTAMP: 'cached_lists_timestamp_'
-};
+
+
+
+
+
+
+
 
 class TrelloTaskCreator {
+    static CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+    static CACHE_KEYS = {
+        BOARDS: 'cached_boards',
+        BOARDS_TIMESTAMP: 'cached_boards_timestamp',
+        LISTS: 'cached_lists_',
+        LISTS_TIMESTAMP: 'cached_lists_timestamp_'
+    };
     constructor() {
         this.apiKey = '';
         this.token = '';
