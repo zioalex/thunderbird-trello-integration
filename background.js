@@ -159,9 +159,8 @@ function htmlToMarkdown(html) {
 
     // Convert ordered lists FIRST (before unordered lists)
     // <ol><li> -> 1. item
-    let olCounter = 0;
     text = text.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, content) => {
-        olCounter = 0;
+        let olCounter = 0;
         const converted = content.replace(/<li[^>]*>(.*?)<\/li>/gi, (liMatch, liContent) => {
             olCounter++;
             return `${olCounter}. ${liContent}\n`;
