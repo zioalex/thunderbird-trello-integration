@@ -190,8 +190,12 @@ function htmlToMarkdown(html) {
         return '\n> ' + content.trim().replace(/\n/g, '\n> ') + '\n';
     });
 
-    // Remove remaining HTML tags
-    text = text.replace(/<[^>]*>/g, '');
+    // Remove remaining HTML tags (repeat until gone, to handle multi-character issues)
+    let prevText;
+    do {
+        prevText = text;
+        text = text.replace(/<[^>]*>/g, '');
+    } while (text !== prevText);
 
     // Decode HTML entities
     text = decodeHtmlEntities(text);
