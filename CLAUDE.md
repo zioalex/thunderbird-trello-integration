@@ -17,6 +17,58 @@ npm run lint:fix           # Auto-fix linting issues
 npm run validate           # Run both lint and test
 ```
 
+### Security Auditing
+
+**IMPORTANT**: Always run npm audit after making changes to dependencies or at the start of any work session.
+
+```bash
+npm audit                   # Check for security vulnerabilities
+npm audit fix              # Automatically fix vulnerabilities without breaking changes
+npm audit fix --force      # Fix all vulnerabilities (may include breaking changes)
+```
+
+**When to run npm audit:**
+- After installing or updating any dependencies
+- At the beginning of each work session
+- Before committing changes
+- Before creating releases
+
+**Target security level:**
+- **Zero vulnerabilities** is the goal
+- All moderate and higher severity issues must be fixed
+- Use npm overrides in package.json if direct updates aren't available
+- Document any remaining low severity issues that can't be fixed
+
+**If vulnerabilities are found:**
+1. Run `npm audit fix` first (safe, non-breaking fixes)
+2. Review remaining vulnerabilities
+3. Update specific packages if needed
+4. Use package.json "overrides" field for transitive dependencies
+5. Verify all tests still pass after fixes
+6. Commit security fixes separately with clear message
+
+**Example workflow:**
+```bash
+# 1. Check for vulnerabilities
+npm audit
+
+# 2. Fix what can be fixed safely
+npm audit fix
+
+# 3. Check if more vulnerabilities remain
+npm audit
+
+# 4. If needed, update specific packages or add overrides
+npm install --save-dev package-name@latest
+
+# 5. Verify everything still works
+npm run validate
+
+# 6. Commit the fixes
+git add package.json package-lock.json
+git commit -m "Fix security vulnerabilities - 0 vulnerabilities remaining"
+```
+
 ### Building & Packaging
 ```bash
 npm run package            # Create extension ZIP file
