@@ -120,28 +120,65 @@ jobs:
     - name: Run tests
       run: |
         echo "🧪 Running tests for release..."
-        npm run test:coverage
+        npm run test:coverage || {
+          echo ""
+          echo "❌ TESTS FAILED - Cannot create release!"
+          echo "Fix tests before creating a release"
+          exit 1
+        }
+        echo "✅ All tests passed"
 
     - name: Run linting
-      run: npm run lint
+      run: |
+        echo "🔍 Running linting..."
+        npm run lint || {
+          echo ""
+          echo "❌ LINTING FAILED - Cannot create release!"
+          echo "Fix linting errors before creating a release"
+          exit 1
+        }
+        echo "✅ Linting passed"
 
     - name: Build extension package
-      run: npm run package
+      run: |
+        echo "📦 Building extension package for release..."
+        npm run package || {
+          echo ""
+          echo "❌ PACKAGE BUILD FAILED - Cannot create release!"
+          exit 1
+        }
+        echo "✅ Package built successfully"
 
     - name: Verify package contents
       run: |
-        echo "Verifying package contents..."
-        unzip -l trello-task-creator-extension.zip
-        
-        # Check that manifest.json is at root level
-        if unzip -l trello-task-creator-extension.zip | grep -q "manifest.json$"; then
-          echo "✓ manifest.json is at root level"
-        else
-          echo "✗ manifest.json not found at root level"
+        echo "🔍 Verifying package contents for release..."
+
+        # Check if package exists
+        if [ ! -f "trello-task-creator-extension.zip" ]; then
+          echo "❌ Package file not found!"
           exit 1
         fi
-        
+
+        echo "📋 Package contents:"
+        unzip -l trello-task-creator-extension.zip
+
+        # Check that manifest.json is at root level
+        if unzip -l trello-task-creator-extension.zip | grep -q "manifest.json$"; then
+          echo "✅ manifest.json is at root level"
+        else
+          echo "❌ manifest.json not found at root level"
+          exit 1
+        fi
+
+        # Verify package is not empty
+        SIZE=$(stat -f%z "trello-task-creator-extension.zip" 2>/dev/null || stat -c%s "trello-task-creator-extension.zip" 2>/dev/null)
+        if [ "$SIZE" -lt 1000 ]; then
+          echo "❌ Package file is too small ($SIZE bytes) - likely corrupt or empty"
+          exit 1
+        fi
+
         echo "📊 Package size: $(du -h trello-task-creator-extension.zip | cut -f1)"
+        echo "✅ Package verification passed"
 
     - name: Generate changelog
       id: changelog
