@@ -74,9 +74,9 @@ npm run version:patch
 - Implements "remember last selection" feature
 - Pre-fills task form from currently displayed email via background script
 - Automatically adds "thunderbird-email" label to created cards
-- Supports due date selection with quick-select buttons (tomorrow, next week, next month)
-- Caches board and list data in browser.storage.local for 5 minutes
-- Provides refresh button to bypass cache and fetch fresh data from Trello API
+- Provides due date selection with quick date buttons (tomorrow, next week, next month)
+- Implements board/list caching with 5-minute TTL using browser.storage.local
+- Includes refresh button to bypass cache and force-reload boards/lists
 
 **background.js**
 - Retrieves current email content using browser.messages.getFull() API
@@ -109,14 +109,16 @@ Stored in `browser.storage.sync`:
 - `lastUsedListId` - Last selected list ID
 
 Stored in `browser.storage.local` (for caching):
-- `cached_boards` - Array of board objects from Trello API
-- `cached_boards_timestamp` - Timestamp when boards were last fetched
-- `cached_lists_{boardId}` - Array of list objects for a specific board
-- `cached_lists_timestamp_{boardId}` - Timestamp when lists for a board were last fetched
+- `cached_boards` - Cached board list from Trello API
+- `cached_boards_timestamp` - Timestamp of when boards were cached
+- `cached_lists_{boardId}` - Cached list data for specific board
+- `cached_lists_timestamp_{boardId}` - Timestamp of when lists were cached
 
-**Cache Duration**: 5 minutes (300,000ms) - After this period, data is automatically refreshed from the Trello API.
-
-**Cache Refresh**: Users can click the refresh button next to the board selector to force an immediate cache invalidation and fetch fresh data from the API, bypassing the cache entirely.
+**Cache Configuration:**
+- Cache duration: 5 minutes (300,000 milliseconds)
+- Cache is automatically checked on each load
+- Refresh button in UI allows users to bypass cache and force-reload data
+- Separate cache entries maintained for each board's lists
 
 ## Testing Strategy
 
