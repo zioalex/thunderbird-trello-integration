@@ -172,36 +172,17 @@ async function getCurrentMessage() {
         // Get the email body using available APIs
         let body = '';
         try {
-            
-            // Strategy 1: Try getPlainBody if available
-            if (browser.messages && typeof browser.messages.getPlainBody === 'function') {
-                try {
-                    const bodyPart = await browser.messages.getPlainBody(message.id);
-                    
-                    if (bodyPart && bodyPart.value) {
-                        body = bodyPart.value;
-                    }
-                } catch (plainBodyError) {
-                    // getPlainBody failed, continue to next strategy
-                }
-            }
-            
-            // Strategy 2: Try getFull message if plain body failed or not available
-            if (!body && browser.messages && typeof browser.messages.getFull === 'function') {
+            // Use getFull to get message parts and extract body
+            if (browser.messages && typeof browser.messages.getFull === 'function') {
                 try {
                     const fullMessage = await browser.messages.getFull(message.id);
-                    
+
                     if (fullMessage && fullMessage.parts) {
                         body = extractBodyFromParts(fullMessage.parts);
                     }
                 } catch (fullError) {
-                    // getFull failed, continue to next strategy
+                    // getFull failed, body will remain empty
                 }
-            }
-            
-            // Strategy 3: Use message snippet as fallback
-            if (!body && message.snippet) {
-                body = message.snippet;
             }
             
             // Clean up and format the body text if we got any
@@ -242,7 +223,7 @@ browser.runtime.onMessage.addListener(async (request, _sender, _sendResponse) =>
     }
 });
 
-// Export for testing
+// Export for testing only - not used by the extension itself
 if (typeof exports === 'object' && typeof module === 'object') {
     module.exports = { getCurrentMessage, formatEmailForTrello, extractBodyFromParts };
 }
