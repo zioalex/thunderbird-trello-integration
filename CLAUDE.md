@@ -116,6 +116,9 @@ The test suite uses Jest with jsdom environment:
 - **integration.test.js** - Cross-component integration
 - **e2e-prefill.test.js** - Email auto-fill feature
 - **e2e-remember.test.js** - "Remember selection" feature
+- **popup-cache.test.js** - Board/list caching functionality
+- **html-extraction.test.js** - HTML to Markdown conversion
+- **due-date.test.js** - Due date functionality
 
 Test setup mocks browser APIs (browser.storage, browser.runtime, browser.messages) in tests/setup.js.
 
