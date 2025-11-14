@@ -129,7 +129,7 @@ class TrelloTaskCreator {
         const day = String(date.getDate()).padStart(2, '0');
         const formatted = `${year}-${month}-${day}`;
 
-        document.getElementById('task-due-date').value = formatted;
+        document.getElementById('task-due-date').value = formatted;npm run version:major
     }
 
     /**
@@ -146,7 +146,7 @@ class TrelloTaskCreator {
     /**
      * Get boards from cache or API
      * @param {boolean} forceRefresh - Force fetch from API even if cache is valid
-     * @returns {Promise<boolean>} True if boards loaded successfully, false otherwise
+     * @returns {Promise<boolean>} - Returns true on success, false on failure
      */
     async loadBoards(forceRefresh = false) {
         try {
