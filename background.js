@@ -156,6 +156,9 @@ function htmlToMarkdown(html) {
     text = text.replace(/<h1>(.*?)<\/h1>/gi, '\n# $1\n');
     text = text.replace(/<h2>(.*?)<\/h2>/gi, '\n## $1\n');
     text = text.replace(/<h3>(.*?)<\/h3>/gi, '\n### $1\n');
+    text = text.replace(/<h4>(.*?)<\/h4>/gi, '\n#### $1\n');
+    text = text.replace(/<h5>(.*?)<\/h5>/gi, '\n##### $1\n');
+    text = text.replace(/<h6>(.*?)<\/h6>/gi, '\n###### $1\n');
 
     // Convert ordered lists FIRST (before unordered lists)
     // <ol><li> -> 1. item
