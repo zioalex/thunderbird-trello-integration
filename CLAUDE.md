@@ -153,7 +153,7 @@ browser.messages.getFull(messageId) → extractBodyFromParts(parts)
 
 The extraction function:
 - Prefers text/plain parts for body content
-- Falls back to text/html with basic tag stripping if no plain text available
+- Falls back to text/html with markdown conversion if no plain text available
 - Recursively traverses nested message parts
 
 Content is formatted with:
