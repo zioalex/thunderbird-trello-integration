@@ -12,6 +12,19 @@ describe('E2E: Remember Board/List Feature', () => {
       'board-select': { value: '', addEventListener: jest.fn(), innerHTML: '', appendChild: jest.fn(), querySelector: jest.fn() },
       'list-select': { value: '', addEventListener: jest.fn(), innerHTML: '', appendChild: jest.fn(), querySelector: jest.fn() },
       'create-task': { addEventListener: jest.fn(), disabled: false, textContent: 'Create Task' },
+      'refresh-boards': {
+        addEventListener: jest.fn(),
+        disabled: false,
+        classList: {
+          add: jest.fn(),
+          remove: jest.fn()
+        }
+      },
+      'task-due-date': { value: '' },
+      'due-tomorrow': { addEventListener: jest.fn() },
+      'due-next-week': { addEventListener: jest.fn() },
+      'due-next-month': { addEventListener: jest.fn() },
+      'due-clear': { addEventListener: jest.fn() },
       'open-options': { addEventListener: jest.fn() },
       'open-options-link': { addEventListener: jest.fn() },
       'config-needed': { style: { display: 'none' } },
@@ -40,10 +53,12 @@ describe('E2E: Remember Board/List Feature', () => {
     mockBoards = [{ id: 'board1', name: 'Test Board 1' }, { id: 'board2', name: 'Test Board 2' }];
     mockLists = [{ id: 'list1', name: 'Test List 1' }, { id: 'list2', name: 'Test List 2' }];
 
-    browser.storage.sync.get.mockResolvedValue({ 
-      trelloApiKey: 'test-key', 
-      trelloToken: 'test-token' 
+    browser.storage.sync.get.mockResolvedValue({
+      trelloApiKey: 'test-key',
+      trelloToken: 'test-token'
     });
+    browser.storage.local.get.mockResolvedValue({});
+    browser.storage.local.set.mockResolvedValue(undefined);
     browser.runtime.sendMessage.mockResolvedValue({});
   });
 

@@ -46,14 +46,14 @@ describe('Popup.js - Coverage Tests', () => {
 
   test('should have error handling in loadBoards', () => {
     const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
-    expect(popupScript).toContain('async loadBoards()');
+    expect(popupScript).toContain('async loadBoards(forceRefresh');
     expect(popupScript).toContain('console.error(\'Error loading boards:\'');
     expect(popupScript).toContain('this.showMessage(\'Error loading boards');
   });
 
   test('should have error handling in loadLists', () => {
     const popupScript = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8');
-    expect(popupScript).toContain('async loadLists(boardId)');
+    expect(popupScript).toContain('async loadLists(boardId');
     expect(popupScript).toContain('console.error(\'Error loading lists:\'');
     expect(popupScript).toContain('this.showMessage(\'Error loading lists');
   });

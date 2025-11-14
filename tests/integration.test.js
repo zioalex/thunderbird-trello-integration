@@ -193,11 +193,11 @@ describe('Email Pre-fill Integration', () => {
 
   test('background script should handle message requests', () => {
     const backgroundJs = fs.readFileSync(path.join(extensionRoot, 'background.js'), 'utf8');
-    
+
     expect(backgroundJs).toContain('browser.runtime.onMessage.addListener');
     expect(backgroundJs).toContain('get_current_message');
     expect(backgroundJs).toContain('browser.messageDisplay.getDisplayedMessage');
-    expect(backgroundJs).toContain('browser.messages.getPlainBody');
+    expect(backgroundJs).toContain('browser.messages.getFull');
   });
 
   test('popup script should send message requests to background', () => {

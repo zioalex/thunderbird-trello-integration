@@ -10,6 +10,10 @@ global.browser = {
     sync: {
       get: jest.fn(),
       set: jest.fn()
+    },
+    local: {
+      get: jest.fn(),
+      set: jest.fn()
     }
   },
   runtime: {
@@ -26,7 +30,7 @@ global.browser = {
     getDisplayedMessage: jest.fn(),
   },
   messages: {
-    getPlainBody: jest.fn(),
+    getFull: jest.fn(),
   },
 };
 
@@ -70,14 +74,16 @@ global.console.error = jest.fn();
 // Reset all mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();
-  
+
   // Reset fetch mock to return successful responses by default
   fetch.mockResolvedValue({
     ok: true,
     json: jest.fn().mockResolvedValue({})
   });
-  
-  // Reset browser storage mock
+
+  // Reset browser storage mocks
   browser.storage.sync.get.mockResolvedValue({});
   browser.storage.sync.set.mockResolvedValue(undefined);
+  browser.storage.local.get.mockResolvedValue({});
+  browser.storage.local.set.mockResolvedValue(undefined);
 });
