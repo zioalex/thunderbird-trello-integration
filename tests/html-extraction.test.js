@@ -220,8 +220,18 @@ describe('HTML Extraction and Conversion', () => {
 
       const result = htmlToMarkdown(html);
 
+      // Verify both parts are present
       expect(result).toContain('I agree with your proposal');
       expect(result).toContain('> What do you think about the new design?');
+      
+      // Verify blockquote formatting is preserved (should have > prefix)
+      // Note: The blockquote conversion adds newlines around the blockquote content,
+      // which are then trimmed at the end, but .toContain() is appropriate here
+      // since we're checking for the presence of the blockquote marker and content
+      const lines = result.split('\n');
+      const blockquoteLine = lines.find(line => line.includes('> What do you think'));
+      expect(blockquoteLine).toBeDefined();
+      expect(blockquoteLine.trim()).toBe('> What do you think about the new design?');
     });
   });
 });
