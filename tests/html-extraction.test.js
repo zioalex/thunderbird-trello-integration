@@ -110,7 +110,8 @@ describe('HTML Extraction and Conversion', () => {
     test('should convert blockquotes', () => {
       const html = '<blockquote>This is a quote</blockquote>';
       const result = htmlToMarkdown(html);
-      expect(result).toContain('> This is a quote');
+      // Verify blockquote is formatted with > prefix (newlines are trimmed when it's the only content)
+      expect(result).toBe('> This is a quote');
     });
 
     test('should handle complex nested HTML', () => {
@@ -221,7 +222,8 @@ describe('HTML Extraction and Conversion', () => {
       const result = htmlToMarkdown(html);
 
       expect(result).toContain('I agree with your proposal');
-      expect(result).toContain('> What do you think about the new design?');
+      // Verify blockquote is on a new line with > prefix (trailing newline is trimmed)
+      expect(result).toMatch(/\n> What do you think about the new design\?$/);
     });
   });
 });
