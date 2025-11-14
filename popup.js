@@ -129,7 +129,7 @@ class TrelloTaskCreator {
         const day = String(date.getDate()).padStart(2, '0');
         const formatted = `${year}-${month}-${day}`;
 
-        document.getElementById('task-due-date').value = formatted;
+        document.getElementById('task-due-date').value = formatted;npm run version:major
     }
 
     /**
@@ -146,6 +146,7 @@ class TrelloTaskCreator {
     /**
      * Get boards from cache or API
      * @param {boolean} forceRefresh - Force fetch from API even if cache is valid
+     * @returns {Promise<boolean>} - Returns true on success, false on failure
      */
     async loadBoards(forceRefresh = false) {
         try {
@@ -160,7 +161,7 @@ class TrelloTaskCreator {
                     this.isCacheValid(cachedData[CACHE_KEYS.BOARDS_TIMESTAMP])) {
                     this.boards = cachedData[CACHE_KEYS.BOARDS];
                     this.populateBoardSelect();
-                    return;
+                    return true;
                 }
             }
 
@@ -182,9 +183,11 @@ class TrelloTaskCreator {
             });
 
             this.populateBoardSelect();
+            return true;
         } catch (error) {
             console.error('Error loading boards:', error);
             this.showMessage('Error loading boards. Please check your API credentials.', 'error');
+            return false;
         }
     }
 
@@ -197,10 +200,10 @@ class TrelloTaskCreator {
         refreshBtn.classList.add('spinning');
 
         try {
-            await this.loadBoards(true);
-            this.showMessage('Boards refreshed successfully!', 'success');
-        } catch (error) {
-            this.showMessage('Error refreshing boards.', 'error');
+            const success = await this.loadBoards(true);
+            if (success) {
+                this.showMessage('Boards refreshed successfully!', 'success');
+            }
         } finally {
             refreshBtn.disabled = false;
             refreshBtn.classList.remove('spinning');

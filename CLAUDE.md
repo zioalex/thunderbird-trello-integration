@@ -69,7 +69,7 @@ npm run version:patch
 
 **popup.js (TrelloTaskCreator class)**
 - Main user interface logic
-- Manages board/list/label selection
+- Manages board/list/label selection with caching for performance
 - Handles task creation workflow
 - Implements "remember last selection" feature
 - Pre-fills task form from currently displayed email via background script
