@@ -74,6 +74,9 @@ npm run version:patch
 - Implements "remember last selection" feature
 - Pre-fills task form from currently displayed email via background script
 - Automatically adds "thunderbird-email" label to created cards
+- Provides due date selection with quick date buttons (tomorrow, next week, next month)
+- Implements board/list caching with 5-minute TTL using browser.storage.local
+- Includes refresh button to bypass cache and force-reload boards/lists
 
 **background.js**
 - Retrieves current email content using browser.messages.getFull() API
@@ -104,6 +107,18 @@ Stored in `browser.storage.sync`:
 - `trelloToken` - User's Trello access token
 - `lastUsedBoardId` - Last selected board ID
 - `lastUsedListId` - Last selected list ID
+
+Stored in `browser.storage.local` (for caching):
+- `cached_boards` - Cached board list from Trello API
+- `cached_boards_timestamp` - Timestamp of when boards were cached
+- `cached_lists_{boardId}` - Cached list data for specific board
+- `cached_lists_timestamp_{boardId}` - Timestamp of when lists were cached
+
+**Cache Configuration:**
+- Cache duration: 5 minutes (300,000 milliseconds)
+- Cache is automatically checked on each load
+- Refresh button in UI allows users to bypass cache and force-reload data
+- Separate cache entries maintained for each board's lists
 
 ## Testing Strategy
 
