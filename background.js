@@ -115,7 +115,13 @@ function decodeHtmlEntities(text) {
         '&copy;': '©',
         '&reg;': '®',
         '&trade;': '™',
-        '&#39;': '\''
+        '&#39;': '\'',
+        '&lsquo;': '‘',
+        '&rsquo;': '’',
+        '&ldquo;': '“',
+        '&rdquo;': '”',
+        '&bull;': '•',
+        '&sect;': '§'
     };
 
     let decoded = text;
