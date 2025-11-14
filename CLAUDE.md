@@ -24,17 +24,44 @@ npm run build              # Run validation then package
 ```
 
 ### Version Management
+
+**IMPORTANT**: Always run version bump after completing and committing your changes.
+
 ```bash
-npm run version:patch      # Bump patch version (1.1.0 → 1.1.1)
-npm run version:minor      # Bump minor version (1.1.0 → 1.2.0)
-npm run version:major      # Bump major version (1.1.0 → 2.0.0)
+npm run version:patch      # Bump patch version (1.1.0 → 1.1.1) - Bug fixes
+npm run version:minor      # Bump minor version (1.1.0 → 1.2.0) - New features
+npm run version:major      # Bump major version (1.1.0 → 2.0.0) - Breaking changes
 ```
 
-The version script automatically:
-- Updates both package.json and manifest.json
-- Commits changes with standardized message
-- Pushes to remote repository
-- Triggers CI/CD to create git tags and releases
+**When to use each version type:**
+- **patch**: Bug fixes, small improvements, test additions (no new features)
+- **minor**: New features, enhancements (backwards compatible)
+- **major**: Breaking changes, major refactors
+
+**The version script (`scripts/bump-version.sh`) automatically:**
+1. Updates package.json version
+2. Updates manifest.json version
+3. Updates tests/manifest.test.js expected version
+4. Commits changes with message "Bump version to X.Y.Z"
+5. Pushes to remote repository
+6. Triggers CI/CD to create git tags and releases
+
+**Interactive Process:**
+- Script will show a confirmation prompt before proceeding
+- Type `y` to confirm or `n` to cancel
+- Use `echo "y" | npm run version:patch` for automated confirmation
+
+**Example workflow:**
+```bash
+# 1. Make your changes and commit them
+git add .
+git commit -m "Fix HTML extraction bugs"
+
+# 2. Bump version (this creates a new commit)
+npm run version:patch
+
+# 3. Version is now updated and pushed automatically
+```
 
 ## Architecture
 
