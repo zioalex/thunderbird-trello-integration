@@ -204,13 +204,8 @@ function htmlToMarkdown(html) {
         return '\n' + lines.join('\n') + '\n';
     });
 
-    // Remove remaining HTML tags (repeat until gone, to handle multi-character issues)
-    let prevText;
-    do {
-        prevText = text;
-        text = text.replace(/<[^>]*>/g, '');
-    } while (text !== prevText);
-
+    // Remove remaining HTML tags in a single pass (handles multi-line tags)
+    text = text.replace(/<[^>]*>/gs, '');
     // Decode HTML entities
     text = decodeHtmlEntities(text);
 
