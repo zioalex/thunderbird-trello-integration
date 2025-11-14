@@ -199,7 +199,9 @@ function htmlToMarkdown(html) {
 
     // Convert blockquotes: <blockquote> -> > text
     text = text.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gis, (match, content) => {
-        return '\n> ' + content.trim().replace(/\n/g, '\n> ') + '\n';
+        // Split content by newlines, trim each line, and prefix with '> '
+        const lines = content.trim().split('\n').map(line => '> ' + line.trim());
+        return '\n' + lines.join('\n') + '\n';
     });
 
     // Remove remaining HTML tags (repeat until gone, to handle multi-character issues)
