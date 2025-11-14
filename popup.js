@@ -147,7 +147,7 @@ class TrelloTaskCreator {
     isCacheValid(timestamp) {
         if (!timestamp) return false;
         const now = Date.now();
-        return (now - timestamp) < CACHE_DURATION;
+        return (now - timestamp) < TrelloTaskCreator.CACHE_DURATION;
     }
 
     /**
@@ -160,13 +160,13 @@ class TrelloTaskCreator {
             // Try to load from cache first
             if (!forceRefresh) {
                 const cachedData = await browser.storage.local.get([
-                    CACHE_KEYS.BOARDS,
-                    CACHE_KEYS.BOARDS_TIMESTAMP
+                    TrelloTaskCreator.CACHE_KEYS.BOARDS,
+                    TrelloTaskCreator.CACHE_KEYS.BOARDS_TIMESTAMP
                 ]);
 
-                if (cachedData[CACHE_KEYS.BOARDS] &&
-                    this.isCacheValid(cachedData[CACHE_KEYS.BOARDS_TIMESTAMP])) {
-                    this.boards = cachedData[CACHE_KEYS.BOARDS];
+                if (cachedData[TrelloTaskCreator.CACHE_KEYS.BOARDS] &&
+                    this.isCacheValid(cachedData[TrelloTaskCreator.CACHE_KEYS.BOARDS_TIMESTAMP])) {
+                    this.boards = cachedData[TrelloTaskCreator.CACHE_KEYS.BOARDS];
                     this.populateBoardSelect();
                     return true;
                 }
@@ -185,8 +185,8 @@ class TrelloTaskCreator {
 
             // Cache the boards data
             await browser.storage.local.set({
-                [CACHE_KEYS.BOARDS]: this.boards,
-                [CACHE_KEYS.BOARDS_TIMESTAMP]: Date.now()
+                [TrelloTaskCreator.CACHE_KEYS.BOARDS]: this.boards,
+                [TrelloTaskCreator.CACHE_KEYS.BOARDS_TIMESTAMP]: Date.now()
             });
 
             this.populateBoardSelect();
@@ -262,8 +262,8 @@ class TrelloTaskCreator {
      */
     async loadLists(boardId, forceRefresh = false) {
         try {
-            const cacheKey = CACHE_KEYS.LISTS + boardId;
-            const timestampKey = CACHE_KEYS.LISTS_TIMESTAMP + boardId;
+            const cacheKey = TrelloTaskCreator.CACHE_KEYS.LISTS + boardId;
+            const timestampKey = TrelloTaskCreator.CACHE_KEYS.LISTS_TIMESTAMP + boardId;
 
             // Try to load from cache first
             if (!forceRefresh) {
