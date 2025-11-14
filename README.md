@@ -4,11 +4,20 @@ A Thunderbird WebExtension that allows you to create Trello tasks directly from 
 
 ## Features
 
-- Create Trello tasks with custom titles and descriptions
-- Select from your Trello boards and lists
-- Simple popup interface
-- Secure API credential storage
-- Connection testing
+- **Email Integration**: Auto-populate task title and description from currently displayed email
+- **Smart Email Formatting**: Converts email HTML to Markdown with proper formatting
+  - Email metadata (from, to, date) included in card description
+  - Quoted text and signatures automatically detected and formatted
+  - Unicode and emoji support
+- **Board & List Selection**: Choose from your Trello boards and lists with caching for fast loading
+- **Due Date Support**: Set task due dates with quick-select buttons (tomorrow, next week, next month)
+- **Label Management**:
+  - Select existing labels or create new ones on-the-fly
+  - Automatic "thunderbird-email" label for tracking email-created tasks
+- **Remember Last Selection**: Automatically remembers your last used board and list
+- **Performance Caching**: 5-minute cache for boards and lists with manual refresh option
+- **Secure Storage**: API credentials stored securely using browser.storage.sync
+- **Connection Testing**: Verify your Trello API credentials work correctly
 
 ## Installation
 
@@ -59,14 +68,37 @@ A Thunderbird WebExtension that allows you to create Trello tasks directly from 
 
 ## Usage
 
-1. Click the Trello icon in the Thunderbird toolbar
-2. Select a **Board** from the dropdown
-3. Select a **List** from the dropdown
-4. Enter a **Task Title** (required)
-5. Optionally enter a **Description**
-6. Click **"Create Task"**
+### Creating a Task from an Email
 
-The task will be created in your selected Trello board and list.
+1. Open or select an email in Thunderbird
+2. Click the Trello icon in the Thunderbird toolbar
+3. The popup will automatically:
+   - Pre-fill the task title with the email subject
+   - Pre-fill the description with formatted email content
+   - Remember your last used board and list (if any)
+4. Select a **Board** from the dropdown (or keep the remembered selection)
+5. Select a **List** from the dropdown (or keep the remembered selection)
+6. Optionally select or create a **Label**
+7. Optionally set a **Due Date** using quick buttons or date picker
+8. Modify the **Task Title** or **Description** if needed
+9. Click **"Create Task"**
+
+The task will be created in your selected Trello board and list with:
+- Your custom title and description
+- Email metadata (from, to, date) in the card description
+- Automatically formatted content (links, lists, quotes, etc.)
+- Selected label (if any)
+- Automatic "thunderbird-email" label for tracking
+- Due date (if set)
+
+### Quick Date Selection
+
+Use the quick date buttons for common due dates:
+- **Tomorrow**: Sets due date to next day
+- **Next Week**: Sets due date to 7 days from now
+- **Next Month**: Sets due date to 30 days from now
+
+Or use the date picker to select any specific date.
 
 ## Troubleshooting
 
@@ -153,12 +185,13 @@ See `.github/workflows/ci.yml` for details.
 
 The extension consists of:
 - `manifest.json` - Extension configuration
-- `popup.html/js` - Main interface for creating tasks
+- `popup.html/js` - Main interface for creating tasks with caching and label management
 - `options.html/js` - Settings page for API credentials
-- `background.js` - Background script (minimal for this version)
-- `tests/` - Test suite for validation
+- `background.js` - Email content extraction and HTML-to-Markdown conversion
+- `tests/` - Comprehensive test suite with 144+ tests across 10 test files
 - `package.json` - Node.js dependencies and scripts
 - `scripts/bump-version.sh` - Automated version management script
+- `.github/workflows/` - CI/CD pipeline for testing, validation, and releases
 
 ### Version Management
 
@@ -223,17 +256,44 @@ Both `package.json` and `manifest.json` are automatically kept in sync.
 
 ## Security Notes
 
-- API credentials are stored locally using browser.storage.sync
+- API credentials are stored locally using browser.storage.sync (encrypted by browser)
 - All communication with Trello uses HTTPS
-- The extension only requests necessary permissions
+- The extension only requests necessary permissions (storage, Trello API, message reading)
+- No API credentials are ever transmitted outside of Trello's official API endpoints
+- Regular security audits via npm audit in CI/CD pipeline
 
-## Future Enhancements
+## Testing
 
-- Auto-populate task details from email content
-- Add due dates and labels to tasks
-- Bulk task creation
-- Email-to-task parsing improvements
-- Integration with Thunderbird's compose window
+The project includes comprehensive testing:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run linting
+npm run lint
+
+# Run full validation (lint + test)
+npm run validate
+```
+
+### Test Coverage
+
+- **popup-simple.test.js** - Basic popup functionality
+- **options.test.js** - Settings page logic
+- **background.test.js** - Email extraction and formatting
+- **html-extraction.test.js** - HTML to Markdown conversion
+- **due-date.test.js** - Due date functionality
+- **popup-cache.test.js** - Board/list caching
+- **manifest.test.js** - Extension manifest validation
+- **integration.test.js** - Cross-component integration
+- **e2e-prefill.test.js** - Email auto-fill feature
+- **e2e-remember.test.js** - Remember last selection feature
+
+All tests run automatically in CI/CD on every push and pull request.
 
 ## License
 
