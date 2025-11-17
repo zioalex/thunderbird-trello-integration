@@ -101,7 +101,9 @@ describe('E2E: Remember Board/List Feature', () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     
     // Verify that the board and list are pre-selected
-    expect(document.getElementById('board-select').value).toBe('board1');
+    const boardSelect = document.getElementById('board-select');
+    const selectedOption = boardSelect.querySelector('option[value="board1"]');
+    expect(selectedOption.selected).toBe(true);
     expect(document.getElementById('list-select').value).toBe('list1');
   });
 
